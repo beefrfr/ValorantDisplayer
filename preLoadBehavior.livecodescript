@@ -70,7 +70,7 @@ on redirect
          exit redirect
       end if
    end repeat
-   setStatus "Getting current screen"
+   setStatus "Getting current screens"
    put getPrivatePresence(tPresences) into tPrivatePresence
    put tPrivatePresence["sessionLoopState"] into tGameState
 
