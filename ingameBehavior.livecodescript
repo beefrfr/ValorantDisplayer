@@ -1,6 +1,5 @@
 ﻿script "ingameBehavior"
 
-/* FIX GAMEMODE IN CUSTOM GAME */
 /* FIX being able to reorder columns */
 /* Double click open valorant tracker */
 
@@ -47,7 +46,14 @@ on inGameSetup
 
     put getTeams(tMatchID, tPresences) into sTeams
 
-    set the text of field "stateField" to capitalizeWords(tPrivatePresence["queueid"]) & space & slash & slash & space & capitalizeWords(sTeams["map"])
+    local tGamemode
+    if tPrivatePresence["provisioningFlow"] is "CustomGame" then
+      put "Custom Game" into tGamemode
+    else
+      put tPrivatePresence["queueid"] into tGamemode
+    end if
+
+    set the text of field "stateField" to capitalizeWords(tGamemode) & space & slash & slash & space & capitalizeWords(sTeams["map"])
 
     setupPolylist
     if tGameState is "INGAME" then
