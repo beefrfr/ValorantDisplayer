@@ -673,7 +673,7 @@ function getInGameTeams pMatchID, pPresences, @xDidFail
   put fetchData("glz", "/core-game/v1/matches/" & pMatchID & "/loadouts", "get") into tLoadouts
 
   local tMatchStats
-  put getPreGameStats(pMatchID) into tMatchStats
+  put getMatchStats(pMatchID) into tMatchStats
   if tMatchStats is false then
     goToPreLoad
   end if
@@ -686,6 +686,7 @@ function getInGameTeams pMatchID, pPresences, @xDidFail
   put empty into tTeams["myParty"]
   put sMaps[tMatchStats["mapid"]] into tTeams["map"]
   put empty into tUUIDs
+
   repeat for each key tKey in tMatchStats["Players"]
     local tPlayer, tRawPlayer
     put tMatchStats["Players"][tKey] into tRawPlayer

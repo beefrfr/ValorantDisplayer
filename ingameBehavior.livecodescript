@@ -15,7 +15,7 @@ global sWeapons, sWeaponList
 global sAgents
 global sSettings
 
-local sTeams
+local sTeams, sMatchID
 
 /* UI vars */
 global tRunning
@@ -38,39 +38,18 @@ on inGameSetupRecursive
     local tPresences, tPrivatePresence, tGameState
     put "INGAME" into tGameState
 
-    local tMatchID, tMatchStats
-    put getMatchID(0) into tMatchID
-    if tMatchID is false then
-      goToPreLoad
-      exit inGameSetupRecursive
-    end if
-
     put getPresences() into tPresences
     put getPrivatePresence(tPresences) into tPrivatePresence
     put tPrivatePresence["sessionLoopState"] into tGameState
 
-    local tDidFail
-    put getInGameTeams(tMatchID, tPresences, tDidFail) into sTeams
-
-    local tGamemode
-    if tPrivatePresence["provisioningFlow"] is "CustomGame" then
-      put "Custom Game" into tGamemode
-    else
-      put tPrivatePresence["queueid"] into tGamemode
-    end if
-
-    set the text of field "stateField" to capitalizeWords(tGamemode) & space & slash & slash & space & capitalizeWords(sTeams["map"])
-
-    setupPolylist
-    if tGameState is "INGAME" then
-      if tDidFail then
-        send "inGameSetupRecursive" to me in 50 milliseconds
-      else
-        send "mainLoop" to me in 1 seconds
-      end if
-    else
+    local tMatchStats
+    put getMatchID(0) into sMatchID
+    if sMatchID is false or tGameState is not "INGAME" then
       goToPreLoad
+      exit inGameSetupRecursive
     end if
+
+    mainLoop
   else
     goToPreLoad
   end if
@@ -461,24 +440,53 @@ function teamToTsv pTeam, pDefaultColor, @xPartyCount
 end teamToTsv
 
 on mainLoop
-  if not tRunning then
-     exit mainLoop
-  end if
+  local tPresences, tPrivatePresence, tGameState
 
-  local tGameState
   put "INGAME" into tGameState
   repeat while tGameState is "INGAME"
-
-    valorantSetup
     put getPresences() into tPresences
     put getPrivatePresence(tPresences) into tPrivatePresence
     put tPrivatePresence["sessionLoopState"] into tGameState
 
-    /* Update UI */
-    layoutControls
-  end repeat
-  if tRunning then
+    local tDidFail
+    put getInGameTeams(sMatchID, tPresences, tDidFail) into sTeams
+
+    local tGamemode
+    if tPrivatePresence["provisioningFlow"] is "CustomGame" then
+      put "Custom Game" into tGamemode
+    else
+      put tPrivatePresence["queueid"] into tGamemode
+    end if
+
+    set the text of field "stateField" to capitalizeWords(tGamemode) & space & slash & slash & space & capitalizeWords(sTeams["map"])
+
+    setupPolylist
+    if tGameState is "INGAME" then
+      if tDidFail then
+        send "inGameSetupRecursive" to me in 50 milliseconds
+        exit mainLoop
+      end if
+    else
       goToPreLoad
       exit mainLoop
+    end if
+
+    if not tRunning then
+       exit mainLoop
+    end if
+
+    valorantSetup
+
+    /* Update UI */
+    layoutControls
+
+    repeat for 5000 times
+      wait 1 milliseconds with messages
+    end repeat
+  end repeat
+
+  if tRunning then
+    goToPreLoad
+    exit mainLoop
   end if
 end mainLoop

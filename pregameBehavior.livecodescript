@@ -383,11 +383,6 @@ function teamToTsv pTeam, pDefaultColor, @xPartyCount
       else
         put "--" & tab after rTsvData
       end if
-
-      /* Weapons */
-      repeat for each item tWeapon in getWeaponList()
-        put tTeammate["Loadout"][tWeapon]["Skin"] & tab after rTsvData
-      end repeat
       
       /* Rank */
       if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID  then
@@ -458,8 +453,6 @@ on mainLoop
       if tDidFail then
         send "preGameSetupRecursive" to me in 50 milliseconds
         exit mainLoop
-      else
-        send "mainLoop" to me in 50 milliseconds
       end if
     else
       goToPreLoad
@@ -474,6 +467,10 @@ on mainLoop
 
     /* Update UI */
     layoutControls
+
+    repeat for 150 times
+      wait 1 milliseconds with messages
+    end repeat
   end repeat
 
   if tRunning then
