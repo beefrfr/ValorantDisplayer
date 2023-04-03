@@ -99,6 +99,7 @@ on redirect pPresences
 			goToMenu
 			break
 		case "PREGAME"
+			goToPreGame
 			break
 		case "INGAME"
       		goToInGame

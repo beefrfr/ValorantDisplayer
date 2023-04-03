@@ -132,6 +132,11 @@ on goToInGame
   send "inGameSetup" to card "inGame" in 5 milliseconds
 end goToInGame
 
+on goToPreGame
+  go to card "preGame"
+  send "preGameSetup" to card "preGame" in 5 milliseconds
+end goToPreGame
+
 /* Valorant Information */
 on valorantSetup pForce
   if sSetup is false then
@@ -599,6 +604,25 @@ function getMatchID pAttempt
   return false
 end getMatchID
 
+function getPreGameID pAttempt
+  local tResult
+  put fetchData("glz", "/pregame/v1/players/" & sPUUID, "get") into tResult
+
+  if tResult is not false and tResult["errorCode"] is not "RESOURCE_NOT_FOUND" then
+    if tResult["errorCode"] is "BAD_CLAIMS" then
+      valorantSetup
+      return getMatchID(pAttempt + 1)
+    end if
+    return tResult["MatchID"]
+  else if pAttempt < 5 then
+    repeat for 50 times
+      wait 1 milliseconds with messages
+    end repeat
+    return getMatchID(pAttempt + 1)
+  end if
+  return false
+end getPreGameID
+
 function getMatchStats pMatchID, pAttempt
   local tResult
   put fetchData("glz", "/core-game/v1/matches/" & pMatchID, "get") into tResult
@@ -618,6 +642,25 @@ function getMatchStats pMatchID, pAttempt
   return false
 end getMatchStats
 
+function getPreGameStats pMatchID, pAttempt
+  local tResult
+  put fetchData("glz", "/pregame/v1/matches/" & pMatchID, "get") into tResult
+
+  if tResult is not false and tResult["errorCode"] is not "RESOURCE_NOT_FOUND" then
+    if tResult["errorCode"] is "BAD_CLAIMS" then
+      valorantSetup
+      return getPreGameStats(pMatchID, pAttempt + 1)
+    end if
+    return tResult
+  else if pAttempt < 5 then
+    repeat for 50 times
+      wait 1 milliseconds with messages
+    end repeat
+    return getPreGameStats(pMatchID, pAttempt + 1)
+  end if
+  return false
+end getPreGameStats
+
 function agentIDtoName pAgentID
   if pAgentID is among the keys of sAgents then
     return sAgents[pAgentID]
@@ -625,12 +668,12 @@ function agentIDtoName pAgentID
   return "Unknown"
 end agentIDtoName
 
-function getTeams pMatchID, pPresences, @xDidFail
+function getInGameTeams pMatchID, pPresences, @xDidFail
   local tLoadouts
   put fetchData("glz", "/core-game/v1/matches/" & pMatchID & "/loadouts", "get") into tLoadouts
 
   local tMatchStats
-  put getMatchStats(pMatchID) into tMatchStats
+  put getPreGameStats(pMatchID) into tMatchStats
   if tMatchStats is false then
     goToPreLoad
   end if
@@ -713,7 +756,62 @@ function getTeams pMatchID, pPresences, @xDidFail
     end repeat
   end if
   return tTeams
-end getTeams
+end getInGameTeams
+
+function getPreGameTeam pMatchID, pPresences, @xDidFail
+  local tMatchStats
+  put getPreGameStats(pMatchID) into tMatchStats
+  if tMatchStats is false then
+    goToPreLoad
+  end if
+
+  local tTeams, tUUIDs
+  put empty into tTeams["blue"]
+  put tMatchStats["team1"] into tTeams["myTeam"]
+  put empty into tTeams["myParty"]
+  put sMaps[tMatchStats["mapid"]] into tTeams["map"]
+  put empty into tUUIDs
+  repeat for each key tKey in tMatchStats["Teams"][1]["players"]
+    local tPlayer, tRawPlayer
+    put tMatchStats["Teams"][1]["players"][tKey] into tRawPlayer
+
+    put agentIDtoName(tRawPlayer["CharacterID"]) into tPlayer["agent"]
+    put false into tPlayer["agentSelected"]
+    if tRawPlayer["CharacterSelectionState"] is "locked" then
+      put true into tPlayer["agentSelected"]
+    end if
+    put tRawPlayer["PlayerIdentity"]["Incognito"] into tPlayer["hiddenName"]
+    put tRawPlayer["PlayerIdentity"]["HideAccountLevel"] into tPlayer["hiddenLevel"]
+    put getPlayerStats(tRawPlayer["Subject"], xDidFail) into tPlayer["Stats"]
+    put tRawPlayer["Subject"] into tPlayer["UUID"]
+    put tRawPlayer["Subject"] & comma after tUUIDs
+
+    local tPrivatePresence, tPartyID
+    put getPrivatePresence(pPresences, tRawPlayer["Subject"]) into tPrivatePresence
+    put tPrivatePresence["partyID"] into tPartyID
+    put tPrivatePresence["accountLevel"] into tPlayer["level"]
+
+    if tRawPlayer["Subject"] is sPUUID then
+      put tPartyID into tTeams["myParty"]
+    end if
+    put tPlayer into tTeams[tTeams["myTeam"]][tPartyID][tRawPlayer["Subject"]]
+  end repeat
+  if the last character of tUUIDs is comma then delete the last character of tUUIDs
+
+  /* Convert UUID to names for each teammate */
+  local tNames
+  put getNames(tUUIDs) into tNames
+  if tNames is not empty then
+    repeat for each key tPartyID in tTeams[tTeams["myTeam"]]
+      repeat for each key tUUID in tTeams[tTeams["myTeam"]][tPartyID]
+        if tUUID is among the keys of tNames then
+          put tNames[tUUID] into tTeams[tTeams["myTeam"]][tPartyID][tUUID]["Name"]
+        end if
+      end repeat
+    end repeat
+  end if
+  return tTeams
+end getPreGameTeam
 
 function rankNumberToRank pRank
   switch pRank
