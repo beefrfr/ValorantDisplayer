@@ -469,7 +469,7 @@ function getPartyMembers pPresences
   return rParty
 end getPartyMembers
 
-function getPartyMemberData pPresences
+function getPartyMemberData pPresences, @xDidFail
   local tPartyInfo
   put empty into tPartyInfo
 
@@ -478,7 +478,7 @@ function getPartyMemberData pPresences
   put getPartyMembers(pPresences) into tParty
   repeat for each element tPartyMember in tParty
     put tPartyMember["uuid"] & comma after tPartyUUIDs
-    put getPlayerStats(tPartyMember["uuid"]) into tPartyInfo[tPartyMember["uuid"]]
+    put getPlayerStats(tPartyMember["uuid"], xDidFail) into tPartyInfo[tPartyMember["uuid"]]
   end repeat
   if the last character of tPartyUUIDs is comma then delete the last character of tPartyUUIDs
 
@@ -495,7 +495,7 @@ function getPartyMemberData pPresences
   return tPartyInfo
 end getPartyMemberData
 
-function getPlayerStats pUUID
+function getPlayerStats pUUID, @xDidFail
   local tPlayerHistory, tPlayerStats
   put fetchData("pd", ("mmr/v1/players/" & pUUID), "GET") into tPlayerHistory
 
@@ -505,6 +505,7 @@ function getPlayerStats pUUID
     put 0 into tPlayerStats["rr"]
     put 0 into tPlayerStats["wr"]
     put 0 into tPlayerStats["peak"]
+    put true into xDidFail
     return tPlayerStats
   end if
   if sCurrentSeason is not among the keys of tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"] then
@@ -624,7 +625,7 @@ function agentIDtoName pAgentID
   return "Unknown"
 end agentIDtoName
 
-function getTeams pMatchID, pPresences
+function getTeams pMatchID, pPresences, @xDidFail
   local tLoadouts
   put fetchData("glz", "/core-game/v1/matches/" & pMatchID & "/loadouts", "get") into tLoadouts
 
@@ -649,11 +650,13 @@ function getTeams pMatchID, pPresences
     put agentIDtoName(tRawPlayer["CharacterID"]) into tPlayer["agent"]
     put tRawPlayer["PlayerIdentity"]["Incognito"] into tPlayer["hiddenName"]
     put tRawPlayer["PlayerIdentity"]["HideAccountLevel"] into tPlayer["hiddenLevel"]
-    put getPlayerStats(tRawPlayer["Subject"]) into tPlayer["Stats"]
+    put getPlayerStats(tRawPlayer["Subject"], xDidFail) into tPlayer["Stats"]
     put tRawPlayer["Subject"] into tPlayer["UUID"]
     put tRawPlayer["Subject"] & comma after tUUIDs
 
-    if tLoadouts is not false then
+    if tLoadouts is false then
+      put true into xDidFail
+    else
       local tLoadout
       if tLoadouts["Loadouts"][tKey]["CharacterID"] is tRawPlayer["CharacterID"] then
         put tLoadouts["Loadouts"][tKey]["Loadout"]["items"] into tLoadout

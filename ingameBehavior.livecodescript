@@ -28,6 +28,10 @@ end closeStack
 on inGameSetup
   clearControls
   createControls
+  inGameSetupRecursive
+end inGameSetup
+
+on inGameSetupRecursive
   valorantSetup
   if sSetup then
     put true into tRunning
@@ -44,7 +48,8 @@ on inGameSetup
     put getPrivatePresence(tPresences) into tPrivatePresence
     put tPrivatePresence["sessionLoopState"] into tGameState
 
-    put getTeams(tMatchID, tPresences) into sTeams
+    local tDidFail
+    put getTeams(tMatchID, tPresences, tDidFail) into sTeams
 
     local tGamemode
     if tPrivatePresence["provisioningFlow"] is "CustomGame" then
@@ -57,12 +62,18 @@ on inGameSetup
 
     setupPolylist
     if tGameState is "INGAME" then
-      send "mainLoop" to me in 1 seconds
+      if tDidFail then
+        send "inGameSetupRecursive" to me in 50 milliseconds
+      else
+        send "mainLoop" to me in 1 seconds
+      end if
+    else
+      goToPreLoad
     end if
   else
     goToPreLoad
   end if
-end inGameSetup
+end inGameSetupRecursive
 
 on resizeStack
   layoutControls

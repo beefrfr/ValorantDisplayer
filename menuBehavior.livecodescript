@@ -261,10 +261,10 @@ on mainLoop
        exit mainLoop
     end if
 
-    local tTsvData
+    local tTsvData, tDidFail
     put "background" & tab & "agent" & tab & "name" & tab & "skin" & tab & "rank" & tab & "peak" & tab & "wr" & tab & "level" & return into tTsvData
     put "102,102,102,102" & tab & "Agent Name" & tab & "Name" & tab & "Vandal Skin" & tab & "Rank (RR)" & tab & "Peak Rank" & tab & "Winrate" & tab & "Level" & return after tTsvData
-    repeat for each element tPartyMember in getPartyMemberData(tPresences)
+    repeat for each element tPartyMember in getPartyMemberData(tPresences, tDidFail)
       put "102,102,102,102" & tab after tTsvData
       put "-" & tab after tTsvData
       put tPartyMember["name"] & tab after tTsvData
