@@ -38,7 +38,12 @@ on menuSetup
 end menuSetup
 
 on resizeStack
-  layoutControls
+  try
+    layoutControls
+  catch tError
+    createControls
+    layoutControls
+  end try
 end resizeStack
 
 on clearControls
