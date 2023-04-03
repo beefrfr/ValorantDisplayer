@@ -468,8 +468,8 @@ on mainLoop
     /* Update UI */
     layoutControls
 
-    repeat for 150 times
-      wait 1 milliseconds with messages
+    repeat for 15 times
+      wait 10 milliseconds with messages
     end repeat
   end repeat
 

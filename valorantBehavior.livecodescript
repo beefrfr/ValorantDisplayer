@@ -596,8 +596,8 @@ function getMatchID pAttempt
     end if
     return tResult["MatchID"]
   else if pAttempt < 5 then
-    repeat for 50 times
-      wait 1 milliseconds with messages
+    repeat for 5 times
+      wait 10 milliseconds with messages
     end repeat
     return getMatchID(pAttempt + 1)
   end if
@@ -615,8 +615,8 @@ function getPreGameID pAttempt
     end if
     return tResult["MatchID"]
   else if pAttempt < 5 then
-    repeat for 50 times
-      wait 1 milliseconds with messages
+    repeat for 5 times
+      wait 10 milliseconds with messages
     end repeat
     return getMatchID(pAttempt + 1)
   end if
@@ -634,8 +634,8 @@ function getMatchStats pMatchID, pAttempt
     end if
     return tResult
   else if pAttempt < 5 then
-    repeat for 50 times
-      wait 1 milliseconds with messages
+    repeat for 5 times
+      wait 10 milliseconds with messages
     end repeat
     return getMatchStats(pMatchID, pAttempt + 1)
   end if
@@ -653,8 +653,8 @@ function getPreGameStats pMatchID, pAttempt
     end if
     return tResult
   else if pAttempt < 5 then
-    repeat for 50 times
-      wait 1 milliseconds with messages
+    repeat for 5 times
+      wait 10 milliseconds with messages
     end repeat
     return getPreGameStats(pMatchID, pAttempt + 1)
   end if
