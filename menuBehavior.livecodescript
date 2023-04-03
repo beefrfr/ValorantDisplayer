@@ -8,6 +8,9 @@ global sLockName, sLockPID, sLockPort, sLockPassword, sLockProtocol
 global sHeaders, sPUUID
 global sCurrentVersion
 global sSetup
+global sWeapons, sWeaponList
+global sAgents
+global sSettings
 
 /* UI vars */
 local sDivAgentName, sDivNameSkin, sDivSkinRank, sDivRankPeak, sDivPeakWR, sDivWRLevel
@@ -30,8 +33,7 @@ on menuSetup
     put true into tRunning
     mainLoop
   else
-    go to card "preLoad"
-    send "redirect" to card "preLoad" in 5 milliseconds
+    goToPreload
   end if
 end menuSetup
 
@@ -267,9 +269,17 @@ on mainLoop
       put "-" & tab after tTsvData
       put tPartyMember["name"] & tab after tTsvData
       put "-" & tab after tTsvData
-      put tPartyMember["rank"] & "(" & tPartyMember["rr"] & ")" & tab after tTsvData
+      if tPartyMember["rr"] is "N/A" or tPartyMember["rank"] is "Unranked" then
+        put tPartyMember["rank"] & tab after tTsvData
+      else
+        put tPartyMember["rank"] & "(" & tPartyMember["rr"] & ")" & tab after tTsvData
+      end if
       put tPartyMember["peak"] & tab after tTsvData
-      put round(tPartyMember["wr"] * 100) & "%" & tab after tTsvData
+      if tPartyMember["wr"] is -1 then
+        put "N/A" & tab after tTsvData
+      else
+        put round(tPartyMember["wr"] * 100) & "%" & tab after tTsvData
+      end if
       put tPartyMember["level"] & return after tTsvData
     end repeat
     set the tsvData of widget "playersPolylist" to tTsvData
@@ -282,7 +292,6 @@ on mainLoop
     end repeat
   end repeat
   if tRunning then
-    go to card "preLoad"
-    send "redirect" to card "preLoad" in 5 milliseconds
+    goToPreload
   end if
 end mainLoop

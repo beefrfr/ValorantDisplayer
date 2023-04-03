@@ -8,18 +8,21 @@ global sLockName, sLockPID, sLockPort, sLockPassword, sLockProtocol
 global sHeaders, sPUUID
 global sCurrentVersion
 global sSetup
+global sWeapons, sWeaponList
+global sAgents
+global sSettings
 
 global tRunning
 
 on openCard
-   set the text of field "statusField" to ""
-   resizeStack
+	set the text of field "statusField" to ""
+	resizeStack
 end openCard
 
 on resizeStack
-   set the width of field "statusField" to the width of this stack
-   set the height of field "statusField" to the height of this stack / 2
-   set the topleft of field "statusField" to 0, 0
+	set the width of field "statusField" to the width of this stack
+	set the height of field "statusField" to the height of this stack / 2
+	set the topleft of field "statusField" to 0, 0
 end resizeStack
 
 on closeStack
@@ -28,66 +31,77 @@ on closeStack
 end closeStack
 
 on setStatus pStatus
-   set the text of field "statusField" to pStatus
-   wait 150 milliseconds with messages
+	set the text of field "statusField" to pStatus
+	wait 150 milliseconds with messages
 end setStatus
 
-on redirect
-   setStatus "Startup"
-   put true into tRunning
-   put false into sSetup
+on main
+	setStatus "Startup"
+	put true into tRunning
+	put false into sSetup
 
-   setStatus ""
-   valorantSetup
-   repeat while sSetup is false
-      setStatus "Valorant not detected"
-      valorantSetup
-      wait 5 milliseconds with messages
+	setStatus ""
+	getValorant
+end main
 
-      if not tRunning then
-         setStatus "Quit"
-         exit redirect
-      end if
-   end repeat
-   
-   setStatus "Getting users"
-   local tPresences, tGameState, tPrivatePresence
-   put getPresences() into tPresences
-   
-   local tLoops
-   put 0 into tLoops
-   repeat while getPrivatePresence(tPresences) is empty
-      setStatus "Getting current user"
-      wait 5 milliseconds with messages
-      put getPresences() into tPresences
-      add 1 to tLoops
-      if tLoops is 10 then
-         valorantSetup
-         put 0 into tLoops
-      end if
+on getValorant
+	setStatus "Valorant not detected"
+	valorantSetup
+	wait 5 milliseconds with messages
 
-      if not tRunning then
-         exit redirect
-      end if
-   end repeat
-   setStatus "Getting current screen"
-   put getPrivatePresence(tPresences) into tPrivatePresence
-   put tPrivatePresence["sessionLoopState"] into tGameState
+	if not tRunning then
+		setStatus "Quit"
+		exit getValorant
+	end if
+	if not sSetup then
+		send "getValorant" to me in 50 milliseconds
+	else
+		getUsers
+	end if
+end getValorant
 
-   if not tRunning then
-      setStatus "Quit"
-      exit redirect
-   end if
+on getUsers pLoops
+	setStatus "Getting current user"
+	local tPresences, tGameState, tPrivatePresence
+	put getPresences() into tPresences
+	
+	if pLoops is empty then put 0 into pLoops
+	if pLoops is 10 then
+		valorantSetup
+		put 0 into pLoops
+	end if
+	add 1 to pLoops
+	if getPrivatePresence(tPresences) is empty then
+		getUsers pLoops
+		exit getUsers
+	end if
 
-   setStatus "Redirecting"
-   switch tGameState
-      case "MENUS"
-         go to card "menu"
-         send "menuSetup" to card "menu" in 5 milliseconds
-         break
-      case "PREGAME"
-         break
-      case "INGAME"
-         break
-   end switch
+	if not tRunning then
+		exit getUsers
+	else
+		redirect tPresences
+	end if
+end getUsers
+
+on redirect pPresences
+	setStatus "Getting current screen"
+	put getPrivatePresence(pPresences) into tPrivatePresence
+	put tPrivatePresence["sessionLoopState"] into tGameState
+
+	if not tRunning then
+		setStatus "Quit"
+		exit redirect
+	end if
+
+	setStatus "Redirecting"
+	switch tGameState
+		case "MENUS"
+			goToMenu
+			break
+		case "PREGAME"
+			break
+		case "INGAME"
+      		goToInGame
+			break
+	end switch
 end redirect

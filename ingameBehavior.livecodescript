@@ -1,5 +1,8 @@
 script "ingameBehavior"
 
+/* FIX GAMEMODE IN CUSTOM GAME */
+/* FIX being able to reorder columns */
+
 /* Valorant vars */
 global sPdUrl, sGlzUrl
 global sRegion
@@ -8,71 +11,98 @@ global sLockName, sLockPID, sLockPort, sLockPassword, sLockProtocol
 global sHeaders, sPUUID
 global sCurrentVersion
 global sSetup
+global sWeapons, sWeaponList
+global sAgents
+global sSettings
+
+local sTeams
 
 /* UI vars */
-local sDivAgentName, sDivNameSkin, sDivSkinRank, sDivRankPeak, sDivPeakWR, sDivWRLevel
 global tRunning
-
-/* Constants */
-constant kDividerNames = "agent/name,name/skin,skin/rank,rank/peak,peak/wr,wr/level"
-constant kDividerBuffer = 10
 
 on closeStack
   put false into tRunning
   close this stack
 end closeStack
 
-on menuSetup
+on inGameSetup
   clearControls
   createControls
   valorantSetup
   if sSetup then
     put true into tRunning
-    mainLoop
+    local tPresences, tPrivatePresence, tGameState
+    put "INGAME" into tGameState
+
+    local tMatchID, tMatchStats
+    put getMatchID(0) into tMatchID
+    if tMatchID is false then
+      goToPreLoad
+    end if
+
+    put getPresences() into tPresences
+    put getPrivatePresence(tPresences) into tPrivatePresence
+    put tPrivatePresence["sessionLoopState"] into tGameState
+
+    put getTeams(tMatchID, tPresences) into sTeams
+
+    set the text of field "stateField" to capitalizeWords(tPrivatePresence["queueid"]) & space & slash & slash & space & capitalizeWords(sTeams["map"])
+
+    setupPolylist
+    if tRunning & tGameState is "INGAME" then
+      send "mainLoop" to me in 5 seconds
+    end if
   else
-    go to card "preLoad"
-    send "redirect" to card "preLoad" in 5 milliseconds
+    goToPreLoad
   end if
-end menuSetup
+end inGameSetup
 
 on resizeStack
   layoutControls
 end resizeStack
 
 on clearControls
-  repeat with x = (the number of controls of card "menu") down to 1
-    if there is a control x of card "menu" then delete control x of card "menu"
+  repeat with x = (the number of controls of card "inGame") down to 1
+    if there is a control x of card "inGame" then delete control x of card "inGame"
   end repeat
 end clearControls
 
 on createControls
   /* Clean up stack */
   clearControls
-  put 10 into sDivAgentName
-  put 25 into sDivNameSkin
-  put 60 into sDivSkinRank
-  put 70 into sDivRankPeak
-  put 80 into sDivPeakWR
-  put 90 into sDivWRLevel
 
-  create field "stateField" in card "menu"
+  set the backgroundcolor of me to "0,120,200"
+
+  create field "stateField" in card "inGame"
   set the lockText of field "stateField" to true
   set the textAlign of field "stateField" to "center"
+  set the textSize of field "stateField" to 14
+  set the textStyle of field "stateField" to "bold"
+  set the textHeight of field "stateField" to 30
+  set the margins of field "stateField" to 0
+  set the borderWidth of field "stateField" to 0
+  set the opaque of field "stateField" to false
 
-  create group "playersGroup" in card "menu"
+  create group "playersGroup" in card "inGame"
   set the lockLoc of group "playersGroup" to true
 
-  create widget "playersPolylist" as "com.livecode.widget.polylist" in group "playersGroup" of card "menu"
+  create widget "playersPolylist" as "com.livecode.widget.polylist" in group "playersGroup" of card "inGame"
   set the dataLayout of widget "playersPolylist" to getPolylistDataLayout()
+  set the margin of widget "playersPolylist" to 1
+  set the borderWidth of widget "playersPolylist" to 0
+  set the itemRoundRadius of widget "playersPolylist" to 5
+  set the autohilite of widget "playersPolylist" to false
+  set the blendLevel of widget "playersPolylist" to 8
+  set the plitemcolor of widget "playersPolylist" to "0,0,0,0"
 
   set the width of the templategraphic to 4
   set the opaque of the templategraphic to true
   set the lineSize of the templategraphic to 0
   set the backgroundColor of the templategraphic to "#929292"
 
-  repeat for each item tDividerName in kDividerNames
-    create graphic tDividerName in group "playersGroup" of card "menu"
-  end repeat
+  create invisible button "rightClickMenu" in card "inGame"
+  set the menuMode of button "rightClickMenu" to "popup"
+  set the style of button "rightClickMenu" to "menu"
 
   reset the templategraphic
 
@@ -80,37 +110,42 @@ on createControls
 end createControls
 
 on layoutControls
-  set the minWidth of this stack to 7 * 100
+  set the minWidth of this stack to the number of items of sSettings["visibleSections"] * 100
   set the minHeight of this stack to 300
+  if the width of this stack < the minWidth of this stack then
+    set the width of this stack to the minWidth of this stack
+  end if
+  if the height of this stack < the minHeight of this stack then
+    set the height of this stack to the minHeight of this stack
+  end if
 
   /* set field rect */
   set the width of field "stateField" to the width of me
-  set the height of field "stateField" to 20
+  set the height of field "stateField" to 35
   set the topLeft of field "stateField" to 0, 0
   
   /* set group rect */
   set the width of group "playersGroup" to the width of me
-  set the height of group "playersGroup" to the height of me - 20
-  set the topLeft of group "playersGroup" to 0, 20
+  set the height of group "playersGroup" to the height of me - 35
+  set the topLeft of group "playersGroup" to 0, 35
 
   /* set polylist rect */
   set the width of widget "playersPolylist" to the width of group "playersGroup"
   set the height of widget "playersPolylist" to the height of group "playersGroup"
   set the topLeft of widget "playersPolylist" to the topLeft of group "playersGroup"
 
-  /* set divider rects */
-  repeat for each item tDividerName in kDividerNames
-    set the height of graphic tDividerName to the dataHeight of widget "playersPolylist"
-  end repeat
-
-  set the topLeft of graphic "agent/name" to the width of group "playersGroup" * (sDivAgentName / 100), the top of group "playersGroup"
-  set the topLeft of graphic "name/skin" to the width of group "playersGroup" * (sDivNameSkin / 100), the top of group "playersGroup"
-  set the topLeft of graphic "skin/rank" to the width of group "playersGroup" * (sDivSkinRank / 100), the top of group "playersGroup"
-  set the topLeft of graphic "rank/peak" to the width of group "playersGroup" * (sDivRankPeak / 100), the top of group "playersGroup"
-  set the topLeft of graphic "peak/wr" to the width of group "playersGroup" * (sDivPeakWR / 100), the top of group "playersGroup"
-  set the topLeft of graphic "wr/level" to the width of group "playersGroup" * (sDivWRLevel / 100), the top of group "playersGroup"
-
+  local tItemHeight, tRows
+  put min(1,the numberofelements of widget "playersPolylist") into tRows
+  put ((the height of me - 35 - ((the margin of widget "playersPolylist" + the borderWidth of widget "playersPolylist") * tRows)) / (tRows)) into tItemHeight
+  put min(max(tItemHeight, 25), 50) into tItemHeight
+  set the itemHeight of widget "playersPolylist" to tItemHeight
 end layoutControls
+
+on setupPolylist
+  set the tsvData of widget "playersPolylist" to getTsvData(sTeams)
+  set the dataLayout of widget "playersPolylist" to getPolylistDataLayout()
+  layoutControls
+end setupPolylist
 
 function getPolylistDataLayout
   local rDataLayout
@@ -122,167 +157,302 @@ function getPolylistDataLayout
   put "100" into rDataLayout[1]["width"]
   put "color" into rDataLayout[1]["content-type"]
 
-  put "agent" into rDataLayout[2]["name"]
-  put "100" into rDataLayout[2]["height"]
-  put "0" into rDataLayout[2]["top"]
-  put "0" into rDataLayout[2]["left"]
-  put sDivAgentName into rDataLayout[2]["width"]
-  put "center" into rDataLayout[2]["align"]
-  put "text-multiline" into rDataLayout[2]["content-type"]
-
-  put "name" into rDataLayout[3]["name"]
-  put "100" into rDataLayout[3]["height"]
-  put "0" into rDataLayout[3]["top"]
-  put sDivAgentName into rDataLayout[3]["left"]
-  put sDivNameSkin - sDivAgentName into rDataLayout[3]["width"]
-  put "center" into rDataLayout[3]["align"]
-  put "text-multiline" into rDataLayout[3]["content-type"]
-
-  put "skin" into rDataLayout[4]["name"]
-  put "100" into rDataLayout[4]["height"]
-  put "0" into rDataLayout[4]["top"]
-  put sDivNameSkin into rDataLayout[4]["left"]
-  put sDivSkinRank - sDivNameSkin into rDataLayout[4]["width"]
-  put "center" into rDataLayout[4]["align"]
-  put "text-multiline" into rDataLayout[4]["content-type"]
-
-  put "rank" into rDataLayout[5]["name"]
-  put "100" into rDataLayout[5]["height"]
-  put "0" into rDataLayout[5]["top"]
-  put sDivSkinRank into rDataLayout[5]["left"]
-  put sDivRankPeak - sDivSkinRank into rDataLayout[5]["width"]
-  put "center" into rDataLayout[5]["align"]
-  put "text-multiline" into rDataLayout[5]["content-type"]
-
-  put "peak" into rDataLayout[6]["name"]
-  put "100" into rDataLayout[6]["height"]
-  put "0" into rDataLayout[6]["top"]
-  put sDivRankPeak into rDataLayout[6]["left"]
-  put sDivPeakWR - sDivRankPeak into rDataLayout[6]["width"]
-  put "center" into rDataLayout[6]["align"]
-  put "text-multiline" into rDataLayout[6]["content-type"]
-
-  put "wr" into rDataLayout[7]["name"]
-  put "100" into rDataLayout[7]["height"]
-  put "0" into rDataLayout[7]["top"]
-  put sDivPeakWR into rDataLayout[7]["left"]
-  put sDivWRLevel - sDivPeakWR into rDataLayout[7]["width"]
-  put "center" into rDataLayout[7]["align"]
-  put "text-multiline" into rDataLayout[7]["content-type"]
-
-  put "level" into rDataLayout[8]["name"]
-  put "100" into rDataLayout[8]["height"]
-  put "0" into rDataLayout[8]["top"]
-  put sDivWRLevel into rDataLayout[8]["left"]
-  put 100 - sDivWRLevel into rDataLayout[8]["width"]
-  put "center" into rDataLayout[8]["align"]
-  put "text-multiline" into rDataLayout[8]["content-type"]
+  local tColumnCount
+  put 0 into tColumnCount
+  repeat for each item tColumn in sSettings["visibleSections"]
+    local tCurrentColumn
+    put tColumn into tCurrentColumn["name"]
+    put "100" into tCurrentColumn["height"]
+    put "0" into tCurrentColumn["top"]
+    put (round(100 / the number of items of sSettings["visibleSections"]) * tColumnCount)  into tCurrentColumn["left"]
+    put round(100 / the number of items of sSettings["visibleSections"]) into tCurrentColumn["width"]
+    put "center" into tCurrentColumn["align"]
+    put "text-multiline" into tCurrentColumn["content-type"]
+    appendArray rDataLayout, tCurrentColumn
+    add 1 to tColumnCount
+  end repeat
 
   return rDataLayout
 end getPolylistDataLayout
 
-on mouseDown
-  if the short name of the target is in kDividerNames then
-    local tLeft, tMinLeft, tMaxLeft
+on toggleVisibleSection pSection
+  set wholematches to true
+  if pSection is among the items of sSettings["visibleSections"] then
+    delete item itemoffset(pSection,sSettings["visibleSections"]) of sSettings["visibleSections"]
+  else
+    put comma & pSection after sSettings["visibleSections"]
+  end if
 
-    switch the short name of the target
-    case "agent/name"
-      put kDividerBuffer into tMinLeft
-      put sDivNameSkin - kDividerBuffer into tMaxLeft
+end toggleVisibleSection
+
+on menuPick pChosenItem
+  set the itemdelimiter to "|"
+  if item 1 of pChosenItem is "Bannable Settings" then
+    switch item 2 of pChosenItem
+    case "Show Hidden Ranks"
+      put not sSettings["alwaysShowRank"] into sSettings["alwaysShowRank"]
       break
-    case "name/skin"
-      put sDivAgentName + kDividerBuffer into tMinLeft
-      put sDivSkinRank - kDividerBuffer into tMaxLeft
+    case "Show Hidden Names"
+      put not sSettings["alwaysShowName"] into sSettings["alwaysShowName"]
       break
-    case "skin/rank"
-      put sDivNameSkin + kDividerBuffer into tMinLeft
-      put sDivRankPeak - kDividerBuffer into tMaxLeft
-      break
-    case "rank/peak"
-      put sDivSkinRank + kDividerBuffer into tMinLeft
-      put sDivPeakWR - kDividerBuffer into tMaxLeft
-      break
-    case "peak/wr"
-      put sDivRankPeak + kDividerBuffer into tMinLeft
-      put sDivWRLevel - kDividerBuffer into tMaxLeft
-      break
-    case "wr/level"
-      put sDivPeakWR + kDividerBuffer into tMinLeft
-      put 100 - kDividerBuffer into tMaxLeft
+    case "Show Hidden Levels"
+      put not sSettings["alwaysShowLevel"] into sSettings["alwaysShowLevel"]
       break
     end switch
-
-    repeat while the mouse is down
-      put item 1 of the mouseLoc into tLeft
-      put 100 * ((tLeft - the left of group "playersGroup") / the width of group "playersGroup") into tLeft
-      if tLeft < tMinLeft then
-        put tMinLeft into tLeft
-      else if tLeft > tMaxLeft then
-        put tMaxLeft into tLeft
-      end if
-      switch the short name of the target
-      case "agent/name"
-        put tLeft into sDivAgentName
-        break
-      case "name/skin"
-        put tLeft into sDivNameSkin
-        break
-      case "skin/rank"
-        put tLeft into sDivSkinRank
-        break
-      case "rank/peak"
-        put tLeft into sDivRankPeak
-        break
-      case "peak/wr"
-        put tLeft into sDivPeakWR
-        break
-      case "wr/level"
-        put tLeft into sDivWRLevel
-        break
-      end switch
-      set the topLeft of the target to the width of group "playersGroup" * (tLeft / 100), the top of group "playersGroup"
-      set the dataLayout of widget "playersPolylist" to getPolylistDataLayout()
-      wait 1 milliseconds with messages
-    end repeat
+  else if item 1 of pChosenItem is "Parties" then
+    switch item 2 of pChosenItem
+    case "Dye"
+      put not sSettings["showParties"] into sSettings["showParties"]
+      break
+    case "Number"
+      toggleVisibleSection "party"
+      break
+    end switch
+  else if item 1 of pChosenItem is "Visible Weapons" then
+    toggleVisibleSection (item 2 of pChosenItem)
+  else
+    toggleVisibleSection (item 1 of pChosenItem)
   end if
+  saveSettings
+  setupPolylist
+  set the itemdelimiter to comma
+end menuPick
+
+function generateRightClickMenu
+  local tMenu
+  put empty into tMenu
+
+  put "(Visible Sections" & return after tMenu
+  repeat for each item tItem in "agent,name,rank,peak,winrate,level"
+    if tItem is among the items of sSettings["visibleSections"] then
+      put "!c" & capitalizeWords(tItem) & return after tMenu
+    else
+      put capitalizeWords(tItem) & return after tMenu
+    end if
+  end repeat
+
+  put "Visible Weapons" & return after tMenu
+  repeat for each item tWeapon in getWeaponList()
+    if tWeapon is among the items of sSettings["visibleSections"] then
+      put tab & "!c" & capitalizeWords(tWeapon) & return after tMenu
+    else
+      put tab & capitalizeWords(tWeapon) & return after tMenu
+    end if
+  end repeat
+  put "-" & return after tMenu
+
+  put "Parties" & return after tMenu
+  if sSettings["showParties"] is true then
+    put tab & "!cDye" & return after tMenu
+  else
+    put tab & "Dye" & return after tMenu
+  end if
+  if "party" is among the items of sSettings["visibleSections"] then
+    put tab & "!cNumber" & return after tMenu
+  else
+    put tab & "Number" & return after tMenu
+  end if
+  put "-" & return after tMenu
+
+  put "Bannable Settings" & return after tMenu
+  put tab & "(These settings are against Valorant" & return after tMenu
+  put tab & "(TOS and may result in a ban" & return after tMenu
+  if sSettings["alwaysShowRank"] is true then
+    put tab & "!cShow Hidden Ranks" & return after tMenu
+  else
+    put tab & "Show Hidden Ranks" & return after tMenu
+  end if
+
+  if sSettings["alwaysShowName"] is true then
+    put tab & "!cShow Hidden Names" & return after tMenu
+  else
+    put tab & "Show Hidden Names" & return after tMenu
+  end if
+
+  if sSettings["alwaysShowLevel"] is true then
+    put tab & "!cShow Hidden Levels" & return after tMenu
+  else
+    put tab & "Show Hidden Levels" & return after tMenu
+  end if
+  return tMenu
+end generateRightClickMenu
+
+on mouseUp pButton
+  if pButton is 3 then
+    set the text of button "rightClickMenu" to generateRightClickMenu()
+    popup button "rightClickMenu" at the mouseloc
+  end if
+end mouseUp
+
+on mouseDown
+  
 end mouseDown
 
-on mainLoop
-  local tPresences, tPrivatePresence, tGameState
-  put "MENUS" into tGameState
-  repeat while tGameState is "MENUS" and tRunning
-    put getPresences() into tPresences
-    put getPrivatePresence(tPresences) into tPrivatePresence
-    put tPrivatePresence["sessionLoopState"] into tGameState
+function blendColors pC1, pC2
+  put item 1 of pC1 into tR1
+  put item 2 of pC1 into tG1
+  put item 3 of pC1 into tB1
+  put item 4 of pC1 into tA1
+  
+  put item 1 of pC2 into tR2
+  put item 2 of pC2 into tG2
+  put item 3 of pC2 into tB2
+  put item 4 of pC2 into tA2
 
-    if not tRunning then
-       exit mainLoop
-    end if
+  local rR, rG, rB, rA, rBlendedColor
+  put round((tR1 + tR2) / 2) into rR
+  put round((tG1 + tG2) / 2) into rG
+  put round((tB1 + tB2) / 2) into rB
+  put round((tA1 + tA2) / 2) into rA
+  
+  put rR & "," & rG & "," & rB & "," & rA into rBlendedColor
+  
+  return rBlendedColor
+end blendColors
 
-    local tTsvData
-    put "background" & tab & "agent" & tab & "name" & tab & "skin" & tab & "rank" & tab & "peak" & tab & "wr" & tab & "level" & return into tTsvData
-    put "102,102,102,102" & tab & "Agent Name" & tab & "Name" & tab & "Vandal Skin" & tab & "Rank (RR)" & tab & "Peak Rank" & tab & "Winrate" & tab & "Level" & return after tTsvData
-    repeat for each element tPartyMember in getPartyMemberData(tPresences)
-      put "102,102,102,102" & tab after tTsvData
-      put "-" & tab after tTsvData
-      put tPartyMember["name"] & tab after tTsvData
-      put "-" & tab after tTsvData
-      put tPartyMember["rank"] & "(" & tPartyMember["rr"] & ")" & tab after tTsvData
-      put tPartyMember["peak"] & tab after tTsvData
-      put round(tPartyMember["wr"] * 100) & "%" & tab after tTsvData
-      put tPartyMember["level"] & return after tTsvData
-    end repeat
-    set the tsvData of widget "playersPolylist" to tTsvData
-
-    /* Update UI */
-    layoutControls
-
-    repeat for 1000 times
-      wait 1 milliseconds with messages
-    end repeat
+function capitalizeWords pString
+  local tCapString
+  put empty into tCapString
+  repeat for each word tWord in pString
+    put toUpper(character 1 of tWord) & (character 2 to -1 of tWord) & space after tCapString
   end repeat
+  if the last character of tCapString is space then delete the last character of tCapString
+  return tCapString
+end capitalizeWords
+
+function getTsvData pTeams
+  if pTeams["myTeam"] is empty then
+    return empty
+  end if
+
+  local tTsvData, tPartyCount
+  put 1 into tPartyCount
+  put empty into tTsvData
+
+  /* Create tsv headers */
+  put "background" & tab after tTsvData
+  put "agent" & tab after tTsvData
+  put "name" & tab after tTsvData
+  repeat for each item tWeapon in getWeaponList()
+    put tWeapon & tab after tTsvData
+  end repeat
+  put "rank" & tab after tTsvData
+  put "peak" & tab after tTsvData
+  put "winrate" & tab after tTsvData
+  put "level" & return after tTsvData
+
+  /* Create visible headers */
+  put empty & tab after tTsvData
+  put "Agent" & tab after tTsvData
+  put "Name" & tab after tTsvData
+  repeat for each item tWeapon in getWeaponList()
+    put capitalizeWords(tWeapon) & tab after tTsvData
+  end repeat
+  put "Rank" & tab after tTsvData
+  put "Peak" & tab after tTsvData
+  put "Winrate" & tab after tTsvData
+  put "Level" & return after tTsvData
+
+  local tMyTeam, tOtherTeam
+  put pTeams[pTeams["myTeam"]] into tMyTeam
+  put pTeams[pTeams["otherTeam"]] into tOtherTeam
+
+  put teamToTsv(tMyTeam, sSettings["blueColor"], tPartyCount) after tTsvData
+  put teamToTsv(tOtherTeam, sSettings["redColor"], tPartyCount) after tTsvData
+  
+  return tTsvData
+end getTsvData
+
+function teamToTsv pTeam, pDefaultColor, @xPartyCount
+  local rTsvData
+  repeat for each element tParty in pTeam
+    repeat for each element tTeammate in tParty
+      /* Background */
+      if tTeammate["UUID"] is sPUUID then
+        put sSettings["myColor"] & tab after rTsvData
+      else
+        if the number of elements of tParty is 1 or sSettings["showParties"] is false then
+          put pDefaultColor & tab after rTsvData
+        else
+          put blendColors(pDefaultColor, sSettings["partyColors"][xPartyCount]) & tab after rTsvData
+        end if
+      end if
+      
+      /* Agent */
+      put tTeammate["agent"] & tab after rTsvData
+      
+      /* Name */
+      if sSettings["alwaysShowName"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID  then
+        put tTeammate["name"] & tab after rTsvData
+      else
+        put "--" & tab after rTsvData
+      end if
+
+      /* Weapons */
+      repeat for each item tWeapon in getWeaponList()
+        put tTeammate["Loadout"][tWeapon]["Skin"] & tab after rTsvData
+      end repeat
+      
+      /* Rank */
+      if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID  then
+        if tTeammate["stats"]["rr"] is "N/A" or tTeammate["stats"]["rank"] is "Unranked" then
+          put tTeammate["stats"]["rank"] & tab after rTsvData
+        else
+          put tTeammate["stats"]["rank"] & "(" & tTeammate["stats"]["rr"] & ")" & tab after rTsvData
+        end if
+      else
+        put "--" & tab after rTsvData
+      end if
+
+      /* Peak */
+      if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID  then
+        put tTeammate["stats"]["peak"] & tab after rTsvData
+      else
+        put "--" & tab after rTsvData
+      end if
+      
+      /* Winrate */
+      if sSettings["alwaysShowWinrate"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID  then
+        if tTeammate["stats"]["wr"] is -1 then
+          put "N/A" & tab after rTsvData
+        else
+          put round(tTeammate["stats"]["wr"] * 100) & "%" & tab after rTsvData
+        end if
+      else
+        put "--" & tab after rTsvData
+      end if
+
+      /* Level */
+      if sSettings["alwaysShowLevel"] or tTeammate["hiddenLevel"] is false or tTeammate["uuid"] is sPUUID then
+        put tTeammate["level"] & return after rTsvData
+      else
+        put "--" & return after rTsvData
+      end if
+    end repeat
+    if the number of elements of tParty > 1 then
+      add 1 to xPartyCount
+    end if
+  end repeat
+  return rTsvData
+end teamToTsv
+
+on mainLoop
+  if not tRunning then
+     exit mainLoop
+  end if
+
+  put getPresences() into tPresences
+  put getPrivatePresence(tPresences) into tPrivatePresence
+  put tPrivatePresence["sessionLoopState"] into tGameState
+
+  /* Update UI */
+  layoutControls
+
   if tRunning then
-    go to card "preLoad"
-    send "redirect" to card "preLoad" in 5 milliseconds
+    if tGameState is "INGAME" then
+      send "mainLoop" to me in 5 seconds
+    else
+      goToPreLoad
+    end if
   end if
 end mainLoop
