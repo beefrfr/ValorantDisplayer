@@ -45,8 +45,8 @@ on main
 end main
 
 on getValorant
-	setStatus "Valorant not detected"
-	valorantSetup
+	setStatus "Looking for Valorant process"
+	valorantSetup true
 	wait 5 milliseconds with messages
 
 	if not tRunning then
@@ -67,7 +67,7 @@ on getUsers pLoops
 	
 	if pLoops is empty then put 0 into pLoops
 	if pLoops is 10 then
-		valorantSetup
+		valorantSetup true
 		put 0 into pLoops
 	end if
 	add 1 to pLoops
@@ -84,7 +84,7 @@ on getUsers pLoops
 end getUsers
 
 on redirect pPresences
-	setStatus "Getting current screen"
+	setStatus "Getting current status"
 	put getPrivatePresence(pPresences) into tPrivatePresence
 	put tPrivatePresence["sessionLoopState"] into tGameState
 

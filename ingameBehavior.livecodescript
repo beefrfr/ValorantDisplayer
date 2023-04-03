@@ -1,7 +1,8 @@
-script "ingameBehavior"
+﻿script "ingameBehavior"
 
 /* FIX GAMEMODE IN CUSTOM GAME */
 /* FIX being able to reorder columns */
+/* Double click open valorant tracker */
 
 /* Valorant vars */
 global sPdUrl, sGlzUrl
@@ -49,8 +50,8 @@ on inGameSetup
     set the text of field "stateField" to capitalizeWords(tPrivatePresence["queueid"]) & space & slash & slash & space & capitalizeWords(sTeams["map"])
 
     setupPolylist
-    if tRunning & tGameState is "INGAME" then
-      send "mainLoop" to me in 5 seconds
+    if tGameState is "INGAME" then
+      send "mainLoop" to me in 1 seconds
     end if
   else
     goToPreLoad
@@ -441,6 +442,9 @@ on mainLoop
      exit mainLoop
   end if
 
+  valorantSetup
+
+  local tGameState
   put getPresences() into tPresences
   put getPrivatePresence(tPresences) into tPrivatePresence
   put tPrivatePresence["sessionLoopState"] into tGameState
@@ -450,7 +454,7 @@ on mainLoop
 
   if tRunning then
     if tGameState is "INGAME" then
-      send "mainLoop" to me in 5 seconds
+      send "mainLoop" to me in 1 seconds
     else
       goToPreLoad
     end if

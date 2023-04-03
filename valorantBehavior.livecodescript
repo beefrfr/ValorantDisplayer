@@ -133,7 +133,10 @@ on goToInGame
 end goToInGame
 
 /* Valorant Information */
-on valorantSetup
+on valorantSetup pForce
+  if sSetup is false then
+    put true into pForce
+  end if
   put true into sSetup
   if getLockFile() is false then
     put false into sSetup
@@ -143,6 +146,10 @@ on valorantSetup
     put false into sSetup
     exit valorantSetup
   end if
+  if pForce is false then
+    exit valorantSetup
+  end if
+
   if getCurrentVersion() is false then
     put false into sSetup
     exit valorantSetup
@@ -598,14 +605,14 @@ function getMatchStats pMatchID, pAttempt
   if tResult is not false and tResult["errorCode"] is not "RESOURCE_NOT_FOUND" then
     if tResult["errorCode"] is "BAD_CLAIMS" then
       valorantSetup
-      return getGameStats(pMatchID, pAttempt + 1)
+      return getMatchStats(pMatchID, pAttempt + 1)
     end if
     return tResult
   else if pAttempt < 5 then
     repeat for 50 times
       wait 1 milliseconds with messages
     end repeat
-    return getGameStats(pMatchID, pAttempt + 1)
+    return getMatchStats(pMatchID, pAttempt + 1)
   end if
   return false
 end getMatchStats
