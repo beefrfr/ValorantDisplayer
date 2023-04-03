@@ -42,6 +42,7 @@ on inGameSetupRecursive
     put getMatchID(0) into tMatchID
     if tMatchID is false then
       goToPreLoad
+      exit inGameSetupRecursive
     end if
 
     put getPresences() into tPresences
@@ -49,7 +50,7 @@ on inGameSetupRecursive
     put tPrivatePresence["sessionLoopState"] into tGameState
 
     local tDidFail
-    put getTeams(tMatchID, tPresences, tDidFail) into sTeams
+    put getInGameTeams(tMatchID, tPresences, tDidFail) into sTeams
 
     local tGamemode
     if tPrivatePresence["provisioningFlow"] is "CustomGame" then
@@ -158,7 +159,7 @@ on layoutControls
   set the topLeft of widget "playersPolylist" to the topLeft of group "playersGroup"
 
   local tItemHeight, tRows
-  put min(1,the numberofelements of widget "playersPolylist") into tRows
+  put max(1,the numberofelements of widget "playersPolylist") into tRows
   put ((the height of me - 35 - ((the margin of widget "playersPolylist" + the borderWidth of widget "playersPolylist") * tRows)) / (tRows)) into tItemHeight
   put min(max(tItemHeight, 25), 50) into tItemHeight
   set the itemHeight of widget "playersPolylist" to tItemHeight
@@ -464,21 +465,20 @@ on mainLoop
      exit mainLoop
   end if
 
-  valorantSetup
-
   local tGameState
-  put getPresences() into tPresences
-  put getPrivatePresence(tPresences) into tPrivatePresence
-  put tPrivatePresence["sessionLoopState"] into tGameState
+  put "INGAME" into tGameState
+  repeat while tGameState is "INGAME"
 
-  /* Update UI */
-  layoutControls
+    valorantSetup
+    put getPresences() into tPresences
+    put getPrivatePresence(tPresences) into tPrivatePresence
+    put tPrivatePresence["sessionLoopState"] into tGameState
 
+    /* Update UI */
+    layoutControls
+  end repeat
   if tRunning then
-    if tGameState is "INGAME" then
-      send "mainLoop" to me in 1 seconds
-    else
       goToPreLoad
-    end if
+      exit mainLoop
   end if
 end mainLoop
