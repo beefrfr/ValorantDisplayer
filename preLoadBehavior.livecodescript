@@ -69,6 +69,7 @@ on getUsers pLoops
 	if pLoops is 10 then
 		valorantSetup true
 		put 0 into pLoops
+		wait 1 milliseconds with messages
 	end if
 	add 1 to pLoops
 	if getPrivatePresence(tPresences) is empty then
