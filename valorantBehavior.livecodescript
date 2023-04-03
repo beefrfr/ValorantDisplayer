@@ -151,7 +151,7 @@ on valorantSetup pForce
     put false into sSetup
     exit valorantSetup
   end if
-  if pForce is false then
+  if pForce is not true then
     exit valorantSetup
   end if
 
