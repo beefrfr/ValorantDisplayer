@@ -23,6 +23,7 @@ on log pMessage
 end log
 
 on openStack
+  set the destroyWindow of this stack to true
   put empty into sWeapons
   put empty into sWeaponList
   put empty into sAgents
