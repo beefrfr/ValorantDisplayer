@@ -17,3 +17,14 @@ Built using LiveCode.
      2. Store player name, agent, map, date, puuid
      3. When puuids match check if names match and if not show old name
  - [ ] Show players with riot gun buddy
+
+
+# Save as Standalone Instructions
+1. Open Project Browser
+3. Delete all substacks of `displayerStack`
+4. For each stack other than `displayerStack` open Property Inspector and set the "Main Stack" to `displayerStack`
+5. Supress messages
+6. Build standalone (if it asks to save, save it)
+7. Close livecode
+8. Commit standalone
+9. Delete changes to `displayer.livecode`
