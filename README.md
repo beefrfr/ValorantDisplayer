@@ -3,10 +3,23 @@ Displays stats about players in your valorant games.
 Built using LiveCode.
 
 ## Download Instructions
-1. Go to [Dist](Dist)
+There are two ways to download, installer or manual.
+
+### Installer
+1. Go to [Dist/Installers](Dist/Installers)
 2. Select your version
 3. Download `Installer.exe`
 4. Run `Installer.exe` and follow the installation instructions
+
+### Manual
+1. Go to [Dist/Files](Dist/Files)
+2. Select your version
+3. Download the contents
+ * `Externals/`
+ * `revsecurity.dll`
+ * `ValorantDisplayer.exe`
+4. Place the contents in the folder you want on your PC
+5. Run ValorantDisplayer.exe
 
 ## To Do:
  - [ ] Complete UI overhaul

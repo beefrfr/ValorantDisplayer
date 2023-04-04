@@ -20,7 +20,7 @@ AppUpdatesURL={#AppUrl}
 DefaultDirName={userappdata}\{#AppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
-OutputDir=C:\Users\ben\Desktop\ValorantDisplayer\Dist\{#AppVersion}
+OutputDir=C:\Users\ben\Desktop\ValorantDisplayer\Dist\Installers\{#AppVersion}
 OutputBaseFilename=Installer
 Compression=lzma
 SolidCompression=yes
@@ -33,8 +33,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\ben\Desktop\ValorantDisplayer\Dist\{#AppVersion}\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ben\Desktop\ValorantDisplayer\Dist\{#AppVersion}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\ben\Desktop\ValorantDisplayer\Dist\Files\{#AppVersion}\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\ben\Desktop\ValorantDisplayer\Dist\Files\{#AppVersion}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
