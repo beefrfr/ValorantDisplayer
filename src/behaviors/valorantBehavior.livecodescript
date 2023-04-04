@@ -31,7 +31,7 @@ on openStack
 
   /* Load Settings */
   local tValorantDisplayerFolder
-  put specialfolderpath("Documents") & slash & "ValorantDisplayer" into tValorantDisplayerFolder
+  put specialfolderpath("resources") into tValorantDisplayerFolder
   if there is not a folder tValorantDisplayerFolder then
     create folder tValorantDisplayerFolder
   end if
