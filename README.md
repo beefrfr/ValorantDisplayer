@@ -9,22 +9,20 @@ Built using LiveCode.
 4. Run `Installer.exe` and follow the installation instructions
 
 ## To Do:
- - [ ] Select visible columns from menu at the top (should be in dropdowns within menu, e.g. ranks, weapons, player info
-     - [ ] separators need to be dynamically created now -- reduce margin on them
- - [ ] Allow polylist to be wider than current window (with a setting) so extra rows dont cramp the screen
- - [ ] `Ban Mode` that will allow users to view hidden players stats (against riot api TOS)
- - [ ] make different menus for menu, in game, and pregame
- - [ ] Double click a player to show their full inventory (layout like valorant using png template of inventory)
- - [ ] Potential smurf marker (can be disabled) which highlights players with high ADR/ low level (and potentially no vandal) ((add setting for ADR limit, with defaults (low - 170, mid - 190, high - 210+)
- - [ ] Fix redirect screen to
-     1. Show status of what's happening so users knows it's not hanging
-     2. Show if Valorant isn't open (if user clicks button saying it is, provide textlog for error feedback)
- - [ ] Previously played with (`%appdata%/local`)
+ - [ ] Complete UI overhaul
+ - [ ] Allow user to reorder columns (might be made redundant by UI overhaul)
+ - [ ] Fix stats disappearing occasionally
+ - [ ] Double click open valorant tracker
+ - [ ] Implement way to view players full inventory
+ - [x] Fix stack not closing on stack close occasionally
+ - [x] Allow user to view "Streamer Mode" details
+ - [ ] Potential smurf marker (can be disabled) which highlights players with high ADR/ low level (and potentially no vandal) ((add setting for ADR limit, with defaults (low - 170, mid - 190, high - 210+))
+ - [ ] Add support for previously played with
      1. Store in a folder of current PUUID
      2. Store player name, agent, map, date, puuid
      3. When puuids match check if names match and if not show old name
+ - [ ] Add support for viewing gun buddys
  - [ ] Show players with riot gun buddy
-
 
 ## Save as Standalone Instructions
 1. Open Project Browser

@@ -1,10 +1,5 @@
 script "pregameBehavior"
 
-/* FIX being able to reorder columns */
-/* Double click open valorant tracker */
-/* Fix stats disappearing */
-/* Fix stack not closing on stack close */
-
 /* Valorant vars */
 global sPdUrl, sGlzUrl
 global sRegion

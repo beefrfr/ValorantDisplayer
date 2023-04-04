@@ -1,8 +1,5 @@
 ﻿script "ingameBehavior"
 
-/* FIX being able to reorder columns */
-/* Double click open valorant tracker */
-
 /* Valorant vars */
 global sPdUrl, sGlzUrl
 global sRegion
