@@ -15,12 +15,6 @@ global sSettings
 local sTeams, sMatchID
 
 /* UI vars */
-global tRunning
-
-on closeStack
-  put false into tRunning
-  close this stack
-end closeStack
 
 on inGameSetup
   clearControls
@@ -31,7 +25,6 @@ end inGameSetup
 on inGameSetupRecursive
   valorantSetup
   if sSetup then
-    put true into tRunning
     local tPresences, tPrivatePresence, tGameState
     put "INGAME" into tGameState
 
@@ -468,7 +461,7 @@ on mainLoop
       exit mainLoop
     end if
 
-    if not tRunning then
+    if not isRunning() then
        exit mainLoop
     end if
 
@@ -482,7 +475,7 @@ on mainLoop
     end repeat
   end repeat
 
-  if tRunning then
+  if isRunning() then
     goToPreLoad
     exit mainLoop
   end if

@@ -14,23 +14,16 @@ global sSettings
 
 /* UI vars */
 local sDivAgentName, sDivNameSkin, sDivSkinRank, sDivRankPeak, sDivPeakWR, sDivWRLevel
-global tRunning
 
 /* Constants */
 constant kDividerNames = "agent/name,name/skin,skin/rank,rank/peak,peak/wr,wr/level"
 constant kDividerBuffer = 10
-
-on closeStack
-  put false into tRunning
-  close this stack
-end closeStack
 
 on menuSetup
   clearControls
   createControls
   valorantSetup
   if sSetup then
-    put true into tRunning
     mainLoop
   else
     goToPreload
@@ -257,12 +250,12 @@ end mouseDown
 on mainLoop
   local tPresences, tPrivatePresence, tGameState
   put "MENUS" into tGameState
-  repeat while tGameState is "MENUS" and tRunning
+  repeat while tGameState is "MENUS" and isRunning()
     put getPresences() into tPresences
     put getPrivatePresence(tPresences) into tPrivatePresence
     put tPrivatePresence["sessionLoopState"] into tGameState
 
-    if not tRunning then
+    if not isRunning() then
        exit mainLoop
     end if
 
@@ -296,7 +289,7 @@ on mainLoop
       wait 10 milliseconds with messages
     end repeat
   end repeat
-  if tRunning then
+  if isRunning() then
     goToPreload
   end if
 end mainLoop

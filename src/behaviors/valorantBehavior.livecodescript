@@ -14,7 +14,7 @@ global sSettings
 
 /* Stack script */
 
-global tRunning
+global sRunning
 
 on log pMessage
   /* Log to file */
@@ -23,6 +23,7 @@ on log pMessage
 end log
 
 on openStack
+  put true into sRunning
   set the destroyWindow of this stack to true
   put empty into sWeapons
   put empty into sWeaponList
@@ -114,28 +115,44 @@ on saveSettings
 end saveSettings
 
 on closeStack
-  put false into tRunning
+  put false into sRunning
   close this stack
 end closeStack
 
+function stopRunning
+  put false into sRunning
+end stopRunning
+
+function isRunning
+  return (sRunning and the mode of this stack is not 0)
+end isRunning
+
 on goToPreLoad
-  go to card "preLoad"
-  send "main" to card "preLoad" in 5 milliseconds
+  if isRunning() then
+    go to card "preLoad"
+    send "main" to card "preLoad" in 5 milliseconds
+  end if
 end gotoPreLoad
 
 on goToMenu
-  go to card "menu"
-  send "menuSetup" to card "menu" in 5 milliseconds
+  if isRunning() then
+    go to card "menu"
+    send "menuSetup" to card "menu" in 5 milliseconds
+  end if
 end goToMenu
 
 on goToInGame
-  go to card "inGame"
-  send "inGameSetup" to card "inGame" in 5 milliseconds
+  if isRunning() then
+    go to card "inGame"
+    send "inGameSetup" to card "inGame" in 5 milliseconds
+  end if
 end goToInGame
 
 on goToPreGame
-  go to card "preGame"
-  send "preGameSetup" to card "preGame" in 5 milliseconds
+  if isRunning() then
+    go to card "preGame"
+    send "preGameSetup" to card "preGame" in 5 milliseconds
+  end if
 end goToPreGame
 
 /* Valorant Information */
