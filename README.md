@@ -1,6 +1,13 @@
 # - Valorant Displayer -
 Displays stats about players in your valorant games.
 Built using LiveCode.
+
+## Download Instructions
+1. Go to [Dist](Dist)
+2. Select your version
+3. Download `Installer.exe`
+4. Run `Installer.exe` and follow the installation instructions
+
 ## To Do:
  - [ ] Select visible columns from menu at the top (should be in dropdowns within menu, e.g. ranks, weapons, player info
      - [ ] separators need to be dynamically created now -- reduce margin on them
@@ -19,12 +26,20 @@ Built using LiveCode.
  - [ ] Show players with riot gun buddy
 
 
-# Save as Standalone Instructions
+## Save as Standalone Instructions
 1. Open Project Browser
 3. Delete all substacks of `displayerStack`
 4. For each stack other than `displayerStack` open Property Inspector and set the "Main Stack" to `displayerStack`
 5. Supress messages
-6. Build standalone (if it asks to save, save it)
-7. Close livecode
-8. Commit standalone
-9. Delete changes to `displayer.livecode`
+6. Stop all current running code (`ctrl` + `.`)
+7. Update standalone settings
+8. Build standalone (if it asks to save, save it)
+9. Close livecode
+10. Fix folder structure of created standalone
+ * Move all files into `Dist/Files/{version}`
+11. Commit standalone
+12. Delete changes to `displayer.livecode`
+13. Rename created folder in `Dist/Files/` to be the App Version
+14. Change `AppVersion` in `ValorantDisplayerSetupScript.iss` to be the App 
+Version defined in step 9
+15. Compile installer using Inno Setup
