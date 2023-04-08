@@ -15,6 +15,7 @@ global sSettings
 /* Stack script */
 
 global sRunning
+local sTsNetResults
 
 on log pMessage
   /* Log to file */
@@ -23,6 +24,7 @@ on log pMessage
 end log
 
 on openStack
+  put empty into sTsNetResults
   put true into sRunning
   set the destroyWindow of this stack to true
   put empty into sWeapons
@@ -259,29 +261,13 @@ end getLockFile
 function getHeaders
   put empty into sHeaders
 
-  local tEntitlements, tAuthPass, tEncodedAuthPass, tAuthHeader, tUrl
-  put "riot:" & sLockPassword into tAuthPass
-  put base64Encode(tAuthPass) into tEncodedAuthPass
-  put "Authorization: Basic " & tEncodedAuthPass into tAuthHeader
-  
-  put "https://127.0.0.1:" & sLockPort & "/entitlements/v1/token" into tUrl
-  
-  put empty into response
-  put empty into tEntitlements
-  
-  try
-    tsNetVerifySSLPeer false
-    set the httpHeaders to tAuthHeader
-    get URL tUrl
-    try
-      put JsonImport(it) into tEntitlements
-    catch tError
-      return false
-    end try
-  catch e
-    exit getHeaders
-  end try
-  
+  local tEntitlements
+  put fetchData("local", "entitlements/v1/token", "GET") into tEntitlements
+
+  if tEntitlements is false then
+    return false
+  end if
+
   put tEntitlements["subject"] into sPUUID
   
   put "User-Agent: " & "ShooterGame/13 Windows/10.0.19043.1.256.64bit" & return after sHeaders
@@ -391,10 +377,11 @@ function getMaps
   return true
 end getMaps
 
-function fetchData pUrlType, pUrl, pMethod, rSuccess
+function fetchData pUrlType, pUrl, pMethod
   if pMethod is empty then put "GET" into pMethod
 
-  set the httpHeaders to sHeaders
+  local tHeaders
+  put sHeaders into tHeaders
 
   local tUrl
   switch pUrlType
@@ -412,7 +399,7 @@ function fetchData pUrlType, pUrl, pMethod, rSuccess
     put "riot:" & sLockPassword into tAuthPass
     put base64Encode(tAuthPass) into tEncodedAuthPass
     put "Authorization: Basic " & tEncodedAuthPass into tAuthHeader
-    set the httpHeaders to tAuthHeader
+    put tAuthHeader into tHeaders
     
     put "https://127.0.0.1:" & sLockPort & "/" & pUrl into tUrl
     break
@@ -423,28 +410,49 @@ function fetchData pUrlType, pUrl, pMethod, rSuccess
     exit fetchData
   end switch
 
-  local tResponse
+  /* Send request */
+  local tResult, tConnectionID
+  put milliseconds() into tConnectionID
+  put empty into sTsNetResults[tConnectionID]
+
+  tsNetVerifySSLPeer false
   if pMethod is "GET" then
-    tsNetVerifySSLPeer false
-    get URL tUrl
-    try
-      put JsonImport(it) into tResponse
-      return tResponse
-    catch tError
-      return false
-    end try
+    put tsNetGet (tConnectionID, tUrl, tHeaders, tsNetCallback) into tResult
   else if pMethod is "POST" then
-    tsNetVerifySSLPeer false
-    post empty to URL tUrl
-    try
-      put JsonImport(it) into tResponse
-      return tResponse
-    catch tError
-      return false
-    end try
+    put tsNetPost(tConnectionID, tUrl, tHeaders, empty, tsNetCallback) into tResult
+  else
+    return false
   end if
-  return false
+  if tResult is not empty then
+    exit fetchData
+  end if
+  repeat while sTsNetResults[tConnectionID] is empty
+    wait 10 milliseconds with messages
+  end repeat
+
+  local tResponse
+  try
+    put JsonImport(sTsNetResults[tConnectionID]) into tResponse
+    return tResponse
+  catch tError
+    return false
+  end try
 end fetchData
+
+on tsNetCallback pID, pResult, pBytes, pCurlCode
+  if pCurlCode is not 0 then
+    put false into sTsNetResults[pID]
+  else
+    local tError, tData
+    put tsNetRetrData(pID, tError) into tData
+    if tError is empty then
+      put tData into sTsNetResults[pID]
+    else
+      put false into sTsNetResults[pID]
+    end if
+  end if
+  tsNetCloseConn pID
+end tsNetCallback
 
 function getPresences
   local tPresences
@@ -583,17 +591,24 @@ function getNames pUUIDs
   //put "Content-Length: " & length(tJson) & return after tHeaders
   put "PUT name-service/v2/players HTTP/1.1" & return before tHeaders
   put return & tJSON after tHeaders
-  set the httpHeaders to tHeaders
 
   /* Send PUT request */
-  local rHeaders, rResult, rBytes, tResultJSON
+  local tResult, tConnectionID
+  put milliseconds() into tConnectionID
+  put empty into sTsNetResults[tConnectionID]
+
   tsNetVerifySSLPeer false
-  put tsNetCustomUploadSync((sPdUrl & "name-service/v2/players"), "PUT", tHeaders, tJSON, rHeaders, rResult, rBytes) into tResultJSON
-  if rResult is not "200" then
+  put tsNetCustomUpload(tConnectionID, (sPdUrl & "name-service/v2/players"), "PUT", tHeaders, tsNetCallback, tJSON) into tResult
+  if tResult is not empty then
     exit getNames
   end if
-  local tResult
-  put JsonImport(tResultJSON) into tResult
+  wait until sTsNetResults[tConnectionID] is not empty with messages
+  try
+    put JsonImport(sTsNetResults[tConnectionID]) into tResult
+  catch tError
+    return false
+  end try
+  
 
   local rNames
   /* Handle response */
@@ -892,4 +907,3 @@ function rankNumberToRank pRank
     return "Radiant"
   end switch
 end rankNumberToRank
-
