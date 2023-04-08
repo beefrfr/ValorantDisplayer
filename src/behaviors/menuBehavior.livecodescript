@@ -285,9 +285,9 @@ on mainLoop
     /* Update UI */
     layoutControls
 
-    repeat for 100 times
-      wait 10 milliseconds with messages
-    end repeat
+    if not waitForSeconds(1.5, tGameState) then
+      exit mainLoop
+    end if
   end repeat
   if isRunning() then
     goToPreload

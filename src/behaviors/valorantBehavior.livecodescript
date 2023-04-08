@@ -907,3 +907,28 @@ function rankNumberToRank pRank
     return "Radiant"
   end switch
 end rankNumberToRank
+
+function waitForSeconds pSeconds, pInitialGameState
+  local tGameState, tFinishedTime
+  put milliseconds() into tFinishedTime
+  add pSeconds * 1000 to tFinishedTime
+  repeat while milliseconds() < tFinishedTime
+    wait 5 milliseconds with messages
+    put getGameState() into tGameState
+    if not sRunning then
+      return false
+    end if
+    if pInitialGameState is not empty and pInitialGameState is not tGameState then
+      goToPreLoad
+      return false
+    end if
+  end repeat
+  return true
+end waitForSeconds
+
+function getGameState
+  put getPresences() into tPresences
+  put getPrivatePresence(tPresences) into tPrivatePresence
+  put tPrivatePresence["sessionLoopState"] into tGameState
+  return tGameState
+end getGameState

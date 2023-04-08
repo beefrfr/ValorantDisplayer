@@ -470,9 +470,9 @@ on mainLoop
     /* Update UI */
     layoutControls
 
-    repeat for 500 times
-      wait 10 milliseconds with messages
-    end repeat
+    if not waitForSeconds(120, tGameState) then
+      exit mainLoop
+    end if
   end repeat
 
   if isRunning() then
