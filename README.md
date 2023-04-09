@@ -23,6 +23,7 @@ There are two ways to download, installer or manual.
 
 ## To Do:
  - [ ] Complete UI overhaul
+ - [ ] Loading assets (ranks & agents) should be stored locally once downloaded, decreases startup time
  - [ ] Allow user to reorder columns (might be made redundant by UI overhaul)
  - [ ] Fix stats disappearing occasionally
  - [ ] Double click open valorant tracker
