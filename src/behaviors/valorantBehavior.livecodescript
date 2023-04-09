@@ -128,7 +128,8 @@ on openStack
 end openStack
 
 on saveSettings
-  local tSettingsFile
+  local tSettingsFile, tValorantDisplayerFolder
+  put specialfolderpath("resources") into tValorantDisplayerFolder
   put (tValorantDisplayerFolder & slash & "settings.json") into tSettingsFile
   put jsonExport(sSettings) into URL("file:" & tSettingsFile)
 end saveSettings
