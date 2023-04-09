@@ -9,10 +9,14 @@ global sHeaders, sPUUID
 global sCurrentVersion
 global sSetup
 global sWeapons, sWeaponList
-global sAgents, sMaps
+global sAgents, sMaps, sRanks
 global sSettings
+global sSeasons
+global sActs
 
 /* Stack script */
+
+constant kDivisionList = "Unranked,Iron,Bronze,Silver,Gold,Plat,Diamond,Ascendant,Immortal,Radiant"
 
 global sRunning
 local sTsNetResults
@@ -159,6 +163,7 @@ end goToPreGame
 
 /* Valorant Information */
 on valorantSetup pForce
+  put empty into sTsNetResults
   if sSetup is false then
     put true into pForce
   end if
@@ -183,7 +188,11 @@ on valorantSetup pForce
     put false into sSetup
     exit valorantSetup
   end if
-  if getCurrentSeason() is false then
+  if getSeasons() is false then
+    put false into sSetup
+    exit valorantSetup
+  end if
+  if getRanks() is false then
     put false into sSetup
     exit valorantSetup
   end if
@@ -198,6 +207,10 @@ on valorantSetup pForce
   if getMaps() is false then
     put false into sSetup
     exit valorantSetup
+  end if
+
+  if not waitForSeconds(0.5, getGameState()) then
+
   end if
 end valorantSetup
 
@@ -300,21 +313,67 @@ function getCurrentVersion
   return tRawVersionLeft is not empty and tRawVersionRight is not empty
 end getCurrentVersion 
 
-function getCurrentSeason
+function getSeasons
   local tContent
+  put empty into sCurrentSeason
+  put empty into sSeasons
+  put empty into sActs
   put fetchData("custom", "https://shared." & sRegion & ".a.pvp.net/content-service/v3/content", "GET") into tContent
   if tContent is false then
     return false
   end if
+  local tActCount, tEpisodeCount
+  local tActIDs
+  put empty into tActIDs
+  put 1 into tActCount
+  put 0 into tEpisodeCount
   repeat for each element tSeason in tContent["Seasons"]
-    if tSeason["IsActive"] is true then
+    if tSeason["IsActive"] and tSeason["type"] is "ACT" is true then
       put tSeason["ID"] into sCurrentSeason
-      return true
-      exit getCurrentSeason
+    end if
+    if tSeason["type"] is "ACT" then
+      put tEpisodeCount into sSeasons[tSeason["id"]]["episode"]
+      put tActCount into sSeasons[tSeason["id"]]["act"]
+      add 1 to tActCount
+      put tSeason["id"] & comma after tActIDs
+    else if tSeason["type"] is "EPISODE" then
+      if the last character of tActIDs is comma then delete the last character of tActIDs
+      put 1 into tActCount
+      repeat for each item tActID in tActIDs
+        put tEpisodeCount into sActs[tActID]["episode"]
+        put tActCount into sActs[tActID]["act"]
+        add 1 to tActCount
+      end repeat
+      put empty into tActIDs
+      add 1 to tEpisodeCount
+      put 1 into tActCount
     end if
   end repeat
-  return false
-end getCurrentSeason
+  return (sCurrentSeason is not empty)
+end getSeasons
+
+function getRanks
+  if sRanks is not empty then
+    return true
+  end if
+  local tRawRanks
+  put fetchData("custom", "https://valorant-api.com/v1/competitivetiers", "get") into tRawRanks
+  if tRawRanks is false then
+    return false
+  end if
+  local tIconPath, tEpisodeCount
+  put 1 into tEpisodeCount
+  repeat for each element tSeason in tRawRanks["data"]
+    repeat for each element tRank in tSeason["tiers"]
+      put tRank["tierName"] into sRanks[tEpisodeCount][tRank["tier"]]["name"]
+      put tRank["divisionName"] into sRanks[tEpisodeCount][tRank["tier"]]["division"]
+      put tRank["largeIcon"] into tIconPath
+      put fetchData("custom",tIconPath,"GET", false) into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
+    end repeat
+    add 1 to tEpisodeCount
+  end repeat
+  return true
+end getRanks
 
 function getWeapons
   if sWeapons is not empty then
@@ -356,8 +415,11 @@ function getAgents
   if tRawAgents is false then
     return false
   end if
+  local tIconPath
   repeat for each element tAgent in tRawAgents["data"]
-    put tAgent["displayName"] into sAgents[tAgent["uuid"]]
+    put tAgent["displayName"] into sAgents[tAgent["uuid"]]["name"]
+    put tAgent["displayIconSmall"] into tIconPath
+    put fetchData("custom",tIconPath,"GET", false) into sAgents[tAgent["uuid"]]["icon"]
   end repeat
   return true
 end getAgents
@@ -377,7 +439,7 @@ function getMaps
   return true
 end getMaps
 
-function fetchData pUrlType, pUrl, pMethod
+function fetchData pUrlType, pUrl, pMethod, pDecode
   if pMethod is empty then put "GET" into pMethod
 
   local tHeaders
@@ -417,7 +479,7 @@ function fetchData pUrlType, pUrl, pMethod
 
   tsNetVerifySSLPeer false
   if pMethod is "GET" then
-    put tsNetGet (tConnectionID, tUrl, tHeaders, tsNetCallback) into tResult
+    put tsNetGet(tConnectionID, tUrl, tHeaders, tsNetCallback) into tResult
   else if pMethod is "POST" then
     put tsNetPost(tConnectionID, tUrl, tHeaders, empty, tsNetCallback) into tResult
   else
@@ -431,10 +493,17 @@ function fetchData pUrlType, pUrl, pMethod
   end repeat
 
   local tResponse
+  if pDecode is false then
+    put sTsNetResults[tConnectionID] into tResponse
+    delete variable sTsNetResults[tConnectionID]
+    return tResponse
+  end if
   try
     put JsonImport(sTsNetResults[tConnectionID]) into tResponse
+    delete variable sTsNetResults[tConnectionID]
     return tResponse
   catch tError
+    delete variable sTsNetResults[tConnectionID]
     return false
   end try
 end fetchData
@@ -544,7 +613,8 @@ function getPlayerStats pUUID, @xDidFail
     put "N/A" into tPlayerStats["rr"]
     put "-1" into tPlayerStats["wr"]
   else
-    put rankNumberToRank(tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][sCurrentSeason]["CompetitiveTier"]) into tPlayerStats["rank"]
+    put rankNumberToRank(tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][sCurrentSeason]["CompetitiveTier"], sCurrentSeason) into tPlayerStats["rank"]
+  put rankNumberToImage(tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][sCurrentSeason]["CompetitiveTier"], sCurrentSeason) into tPlayerStats["rankIcon"]
     put tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][sCurrentSeason]["RankedRating"] into tPlayerStats["rr"]
 
     local tWR
@@ -556,17 +626,31 @@ function getPlayerStats pUUID, @xDidFail
     put tWR into tPlayerStats["wr"]
   end if
 
-  local tCurrentMaxRank
+  local tCurrentMaxRank, tCurrentMaxDivision, tCurrentMaxSeason
   put 0 into tCurrentMaxRank
+  put item 1 of kDivisionList into tCurrentMaxDivision
   repeat for each key tKey in tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"]
     if the number of elements of tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][tKey] is 0 then
       next repeat
     end if
-    if tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][tKey]["Rank"] > tCurrentMaxRank then
+    local tRank, tDivision
+    put tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][tKey]["Rank"] into tRank
+    put rankNumberToDivision(tRank, actIDToEpisode(tKey)) into tDivision
+    if compareDivisions(tDivision, tCurrentMaxDivision) is 1 then
       put tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][tKey]["Rank"] into tCurrentMaxRank
+      put tDivision into tCurrentMaxDivision
+      put tKey into tCurrentMaxSeason
     end if
   end repeat
-  put rankNumberToRank(tCurrentMaxRank) into tPlayerStats["peak"]
+  put rankNumberToRank(tCurrentMaxRank, actIDToEpisode(tCurrentMaxSeason)) into tPlayerStats["peak"]
+  put sSeasons[tCurrentMaxSeason]["episode"] into tPlayerStats["peakEpisode"]
+  put sSeasons[tCurrentMaxSeason]["act"] into tPlayerStats["peakAct"]
+  put rankNumberToImage(tCurrentMaxRank, actIDToEpisode(tCurrentMaxSeason)) into tPlayerStats["peakIcon"]
+  put tCurrentMaxRank into tPlayerStats["currentMaxRank"]
+  put tCurrentMaxSeason into tPlayerStats["currentMaxSeason"]
+  put actIDToEpisode(tCurrentMaxSeason) into tPlayerStats["peakEpisode"]
+  put actIDToAct(tCurrentMaxSeason) into tPlayerStats["peakAct"]
+
   return tPlayerStats
 end getPlayerStats
 
@@ -605,7 +689,9 @@ function getNames pUUIDs
   wait until sTsNetResults[tConnectionID] is not empty with messages
   try
     put JsonImport(sTsNetResults[tConnectionID]) into tResult
+    delete variable sTsNetResults[tConnectionID]
   catch tError
+    delete variable sTsNetResults[tConnectionID]
     return false
   end try
   
@@ -696,10 +782,17 @@ end getPreGameStats
 
 function agentIDtoName pAgentID
   if pAgentID is among the keys of sAgents then
-    return sAgents[pAgentID]
+    return sAgents[pAgentID]["name"]
   end if
   return "Unknown"
 end agentIDtoName
+
+function agentIDtoIcon pAgentID
+  if pAgentID is among the keys of sAgents then
+    return sAgents[pAgentID]["icon"]
+  end if
+  return empty
+end agentIDtoIcon
 
 function getInGameTeams pMatchID, pPresences, @xDidFail
   local tLoadouts
@@ -725,6 +818,7 @@ function getInGameTeams pMatchID, pPresences, @xDidFail
     put tMatchStats["Players"][tKey] into tRawPlayer
 
     put agentIDtoName(tRawPlayer["CharacterID"]) into tPlayer["agent"]
+    put agentIDtoIcon(tRawPlayer["CharacterID"]) into tPlayer["agentIcon"]
     put tRawPlayer["PlayerIdentity"]["Incognito"] into tPlayer["hiddenName"]
     put tRawPlayer["PlayerIdentity"]["HideAccountLevel"] into tPlayer["hiddenLevel"]
     put getPlayerStats(tRawPlayer["Subject"], xDidFail) into tPlayer["Stats"]
@@ -810,6 +904,8 @@ function getPreGameTeam pMatchID, pPresences, @xDidFail
     put tMatchStats["Teams"][1]["players"][tKey] into tRawPlayer
 
     put agentIDtoName(tRawPlayer["CharacterID"]) into tPlayer["agent"]
+    put agentIDtoIcon(tRawPlayer["CharacterID"]) into tPlayer["agentIcon"]
+    
     put false into tPlayer["agentSelected"]
     if tRawPlayer["CharacterSelectionState"] is "locked" then
       put true into tPlayer["agentSelected"]
@@ -844,69 +940,60 @@ function getPreGameTeam pMatchID, pPresences, @xDidFail
       end repeat
     end repeat
   end if
+  if not waitForSeconds(0.1, getGameState()) then
+
+  end if
   return tTeams
 end getPreGameTeam
 
-function rankNumberToRank pRank
-  switch pRank
-  case 0
-    return "Unranked"
-  case 1
-    return "Unranked"
-  case 2
-    return "Unranked"
-  case 3
-    return "Iron 1"
-  case 4
-    return "Iron 2"
-  case 5
-    return "Iron 3"
-  case 6
-    return "Bronze 1"
-  case 7
-    return "Bronze 2"
-  case 8
-    return "Bronze 3"
-  case 9
-    return "Silver 1"
-  case 10
-    return "Silver 2"
-  case 11
-    return "Silver 3"
-  case 12
-    return "Gold 1"
-  case 13
-    return "Gold 2"
-  case 14
-    return "Gold 3"
-  case 15
-    return "Platinum 1"
-  case 16
-    return "Platinum 2"
-  case 17
-    return "Platinum 3"
-  case 18
-    return "Diamond 1"
-  case 19
-    return "Diamond 2"
-  case 20
-    return "Diamond 3"
-  case 21
-    return "Ascendant 1"
-  case 22
-    return "Ascendant 2"
-  case 23
-    return "Ascendant 3"
-  case 24
-    return "Immortal 1"
-  case 25
-    return "Immortal 2"
-  case 26
-    return "Immortal 3"
-  case 27
-    return "Radiant"
-  end switch
+function actIDToEpisode pActID
+  return sActs[pActID]["episode"]
+end actIDToEpisode
+
+function actIDToAct pActID
+  return sActs[pActID]["act"]
+end actIDToAct
+
+function compareDivisions pDiv1, pDiv2
+  if itemOffset(pDiv1, kDivisionList) > itemOffset(pDiv2, kDivisionList) then
+    return 1
+  else
+    return 2
+  end if
+end compareDivisions
+
+function rankNumberToRank pRank, pSeason
+  if pSeason is among the keys of sRanks then
+    return sRanks[pSeason][pRank]["name"]
+  end if
+  local tKeys, tRecentKey
+  put the keys of sranks into tKeys
+  sort tKeys
+  put line -1 of tKeys into tRecentKey
+  return sRanks[tRecentKey][pRank]["name"]
 end rankNumberToRank
+
+function rankNumberToImage pRank, pSeason
+  if pSeason is among the keys of sRanks then
+    return sRanks[pSeason][pRank]["icon"]
+  end if
+  local tKeys, tRecentKey
+  put the keys of sranks into tKeys
+  sort tKeys
+  put line -1 of tKeys into tRecentKey
+  return sRanks[tRecentKey][pRank]["icon"]
+end rankNumberToImage
+
+function rankNumberToDivision pRank, pSeason
+  if pSeason is among the keys of sRanks then
+    return sRanks[pSeason][pRank]["division"]
+  end if
+  local tKeys, tRecentKey
+  put the keys of sranks into tKeys
+  sort tKeys
+  put line -1 of tKeys into tRecentKey
+  return sRanks[tRecentKey][pRank]["division"]
+end rankNumberToDivision
 
 function waitForSeconds pSeconds, pInitialGameState
   local tGameState, tFinishedTime
