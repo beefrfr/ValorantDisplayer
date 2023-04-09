@@ -13,13 +13,24 @@ global sAgents, sMaps, sRanks
 global sSettings
 global sSeasons
 global sActs
+global sFetchDataCache
+global sShouldCache
 
 /* Stack script */
 
 constant kDivisionList = "Unranked,Iron,Bronze,Silver,Gold,Plat,Diamond,Ascendant,Immortal,Radiant"
+constant kCacheTimeoutMilliseconds = 10000
 
 global sRunning
 local sTsNetResults
+
+on useCache
+  put true into sShouldCache
+end useCache
+
+on ignoreCache
+  put false into sShouldCache
+end ignoreCache
 
 on log pMessage
   /* Log to file */
@@ -34,6 +45,8 @@ on openStack
   put empty into sWeapons
   put empty into sWeaponList
   put empty into sAgents
+  put empty into sFetchDataCache
+  useCache
   send "goToPreLoad" to me in 5 milliseconds
 
   /* Load Settings */
@@ -275,7 +288,9 @@ function getHeaders
   put empty into sHeaders
 
   local tEntitlements
+  ignoreCache
   put fetchData("local", "entitlements/v1/token", "GET") into tEntitlements
+  useCache
 
   if tEntitlements is false then
     return false
@@ -472,6 +487,30 @@ function fetchData pUrlType, pUrl, pMethod, pDecode
     exit fetchData
   end switch
 
+  if sShouldCache is true then
+    if tUrl is among the keys of sFetchDataCache then
+      /* Check is right cache entry */
+      if  sFetchDataCache[tUrl]["pUrlType"] is pUrlType and \
+          sFetchDataCache[tUrl]["pMethod"] is pMethod and \
+          sFetchDataCache[tUrl]["pDecode"] is pDecode then
+
+          /* Check if cache has expired */
+          if (milliseconds() - sFetchDataCache[tUrl]["millis"]) < kCacheTimeoutMilliseconds then
+            /* Check cache wasnt failed */
+            if sFetchDataCache[tUrl]["result"] is not false then
+              return sFetchDataCache[tUrl]["result"]
+            end if
+          end if
+      end if
+    end if
+  end if
+
+  put pUrlType into sFetchDataCache[tUrl]["pUrlType"]
+  put pMethod into sFetchDataCache[tUrl]["pMethod"]
+  put pDecode into sFetchDataCache[tUrl]["pDecode"]
+  put milliseconds() into sFetchDataCache[tUrl]["millis"]
+  put false into sFetchDataCache[tUrl]["result"]
+
   /* Send request */
   local tResult, tConnectionID
   put milliseconds() into tConnectionID
@@ -496,11 +535,13 @@ function fetchData pUrlType, pUrl, pMethod, pDecode
   if pDecode is false then
     put sTsNetResults[tConnectionID] into tResponse
     delete variable sTsNetResults[tConnectionID]
+    put tResponse into sFetchDataCache[tUrl]["result"]
     return tResponse
   end if
   try
     put JsonImport(sTsNetResults[tConnectionID]) into tResponse
     delete variable sTsNetResults[tConnectionID]
+    put tResponse into sFetchDataCache[tUrl]["result"]
     return tResponse
   catch tError
     delete variable sTsNetResults[tConnectionID]
@@ -525,7 +566,9 @@ end tsNetCallback
 
 function getPresences
   local tPresences
+  ignoreCache
   put fetchData("local", "chat/v4/presences", "GET") into tPresences
+  useCache
   return tPresences["presences"]
 end getPresences
 
@@ -744,7 +787,9 @@ end getPreGameID
 
 function getMatchStats pMatchID, pAttempt
   local tResult
+  ignoreCache
   put fetchData("glz", "/core-game/v1/matches/" & pMatchID, "get") into tResult
+  useCache
 
   if tResult is not false and tResult["errorCode"] is not "RESOURCE_NOT_FOUND" then
     if tResult["errorCode"] is "BAD_CLAIMS" then
@@ -763,7 +808,9 @@ end getMatchStats
 
 function getPreGameStats pMatchID, pAttempt
   local tResult
+  ignoreCache
   put fetchData("glz", "/pregame/v1/matches/" & pMatchID, "get") into tResult
+  useCache
 
   if tResult is not false and tResult["errorCode"] is not "RESOURCE_NOT_FOUND" then
     if tResult["errorCode"] is "BAD_CLAIMS" then
