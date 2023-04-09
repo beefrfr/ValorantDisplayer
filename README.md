@@ -24,6 +24,7 @@ There are two ways to download, installer or manual.
 ## To Do:
  - [ ] Complete UI overhaul
  - [ ] Loading assets (ranks & agents) should be stored locally once downloaded, decreases startup time
+ - [ ] Change all redirects to be in `valorantBehavior.livecodescript` instead of `preLoad.livecodescript`, preload should be used exclusively for loading files - show description of what is currently happening, what files are being downloaded, and provide a progress bar. Should be able to reduce the currently HIGH initial loading time.
  - [ ] Allow user to reorder columns (might be made redundant by UI overhaul)
  - [ ] Fix stats disappearing occasionally
  - [ ] Double click open valorant tracker
