@@ -398,6 +398,17 @@ function getRanks
   if sRanks is not empty then
     return true
   end if
+
+  local tDownloadedFolder, tRanksFolder
+  put specialfolderpath("resources") & "/assets/downloaded" into tDownloadedFolder
+  put tDownloadedFolder & "/ranks" into tRanksFolder
+  if there is not a folder tDownloadedFolder then
+    create folder tDownloadedFolder
+  end if
+  if there is not a folder tRanksFolder then
+    create folder tRanksFolder
+  end if
+
   local tRawRanks
   put fetchData("custom", "https://valorant-api.com/v1/competitivetiers", "get") into tRawRanks
   if tRawRanks is false then
@@ -407,10 +418,23 @@ function getRanks
   put 1 into tEpisodeCount
   repeat for each element tSeason in tRawRanks["data"]
     repeat for each element tRank in tSeason["tiers"]
+      local tIconData, tIconLocalPath
       put tRank["tierName"] into sRanks[tEpisodeCount][tRank["tier"]]["name"]
       put tRank["divisionName"] into sRanks[tEpisodeCount][tRank["tier"]]["division"]
       put tRank["largeIcon"] into tIconPath
-      put fetchData("custom",tIconPath,"GET", false) into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
+      put tRanksFolder & "/rank_" & tRank["tierName"] & ".data" into tIconLocalPath
+      if there is a file tIconLocalPath then
+        put URL("file:" & tIconLocalPath) into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
+        next repeat
+      end if
+
+      put fetchData("custom",tIconPath,"GET", false) into tIconData
+      if tIconData is false then
+        put tIconData into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
+        next repeat
+      end if
+      put tIconData into URL("file:" & tIconLocalPath)
+      put tIconData into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
     end repeat
     add 1 to tEpisodeCount
   end repeat
@@ -452,6 +476,17 @@ function getAgents
   if sAgents is not empty then
     return true
   end if
+
+  local tDownloadedFolder, tAgentsFolder
+  put specialfolderpath("resources") & "/assets/downloaded" into tDownloadedFolder
+  put tDownloadedFolder & "/agents" into tAgentsFolder
+  if there is not a folder tDownloadedFolder then
+    create folder tDownloadedFolder
+  end if
+  if there is not a folder tAgentsFolder then
+    create folder tAgentsFolder
+  end if
+
   local tRawAgents
   put fetchData("custom", "https://valorant-api.com/v1/agents", "get") into tRawAgents
   if tRawAgents is false then
@@ -459,9 +494,22 @@ function getAgents
   end if
   local tIconPath
   repeat for each element tAgent in tRawAgents["data"]
+    local tIconData, tIconLocalPath
     put tAgent["displayName"] into sAgents[tAgent["uuid"]]["name"]
     put tAgent["displayIconSmall"] into tIconPath
-    put fetchData("custom",tIconPath,"GET", false) into sAgents[tAgent["uuid"]]["icon"]
+    put tAgentsFolder & "/agent_" & tAgent["displayName"] & ".data" into tIconLocalPath
+    if there is a file tIconLocalPath then
+      put URL("file:" & tIconLocalPath) into sAgents[tAgent["uuid"]]["icon"]
+      next repeat
+    end if
+
+    put fetchData("custom",tIconPath,"GET", false) into tIconData
+    if tIconData is false then
+      put tIconData into sAgents[tAgent["uuid"]]["icon"]
+      next repeat
+    end if
+    put tIconData into URL("file:" & tIconLocalPath)
+    put tIconData into sAgents[tAgent["uuid"]]["icon"]
   end repeat
   return true
 end getAgents
