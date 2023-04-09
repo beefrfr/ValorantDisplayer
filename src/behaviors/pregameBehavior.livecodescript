@@ -35,13 +35,13 @@ on preGameSetupRecursive
     local tMatchStats
     put getPreGameID(0) into sMatchID
     if sMatchID is false or tGameState is not "PREGAME" then
-      goToPreLoad
+      redirect
       exit preGameSetupRecursive
     end if
 
     mainLoop
   else
-    goToPreLoad
+    redirect
   end if
 end preGameSetupRecursive
 
@@ -523,7 +523,7 @@ on mainLoop
         exit mainLoop
       end if
     else
-      goToPreLoad
+      redirect
       exit mainLoop
     end if
 
@@ -542,7 +542,6 @@ on mainLoop
   end repeat
 
   if isRunning() then
-    goToPreLoad
-    exit mainLoop
+    redirect
   end if
 end mainLoop

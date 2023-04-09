@@ -290,6 +290,6 @@ on mainLoop
     end if
   end repeat
   if isRunning() then
-    goToPreload
+    redirect
   end if
 end mainLoop

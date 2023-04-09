@@ -153,6 +153,32 @@ on goToPreLoad
   end if
 end gotoPreLoad
 
+on redirect
+  if isRunning() then
+    valorantSetup
+    local tPresences, tPrivatePresence, tGameState
+    put getPresences() into tPresences
+    put getPrivatePresence(pPresences) into tPrivatePresence
+    put tPrivatePresence["sessionLoopState"] into tGameState
+
+    if not isRunning() then
+      exit redirect
+    end if
+
+    switch tGameState
+      case "MENUS"
+        goToMenu
+        break
+      case "PREGAME"
+        goToPreGame
+        break
+      case "INGAME"
+            goToInGame
+        break
+    end switch
+  end if
+end redirect
+
 on goToMenu
   if isRunning() then
     go to card "menu"
@@ -848,7 +874,7 @@ function getInGameTeams pMatchID, pPresences, @xDidFail
   local tMatchStats
   put getMatchStats(pMatchID) into tMatchStats
   if tMatchStats is false then
-    goToPreLoad
+    redirect
   end if
 
   local tTeams, tUUIDs
@@ -937,7 +963,7 @@ function getPreGameTeam pMatchID, pPresences, @xDidFail
   local tMatchStats
   put getPreGameStats(pMatchID) into tMatchStats
   if tMatchStats is false then
-    goToPreLoad
+    redirect
   end if
 
   local tTeams, tUUIDs
@@ -1053,7 +1079,7 @@ function waitForSeconds pSeconds, pInitialGameState
       return false
     end if
     if pInitialGameState is not empty and pInitialGameState is not tGameState then
-      goToPreLoad
+      redirect
       return false
     end if
   end repeat

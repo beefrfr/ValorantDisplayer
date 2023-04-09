@@ -71,31 +71,6 @@ on getUsers pLoops
 
 	if not isRunning() then
 		exit getUsers
-	else
-		redirect tPresences
 	end if
+	redirect
 end getUsers
-
-on redirect pPresences
-	setStatus "Getting current status"
-	put getPrivatePresence(pPresences) into tPrivatePresence
-	put tPrivatePresence["sessionLoopState"] into tGameState
-
-	if not isRunning() then
-		setStatus "Quit"
-		exit redirect
-	end if
-
-	setStatus "Redirecting"
-	switch tGameState
-		case "MENUS"
-			goToMenu
-			break
-		case "PREGAME"
-			goToPreGame
-			break
-		case "INGAME"
-      		goToInGame
-			break
-	end switch
-end redirect
