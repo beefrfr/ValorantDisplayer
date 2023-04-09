@@ -24,7 +24,6 @@ on preGameSetup
 end preGameSetup
 
 on preGameSetupRecursive
-  valorantSetup
   if sSetup then
     local tPresences, tPrivatePresence, tGameState
     put "PREGAME" into tGameState
@@ -47,12 +46,7 @@ on preGameSetupRecursive
 end preGameSetupRecursive
 
 on resizeStack
-  try
-    layoutControls
-  catch tError
-    createControls
-    layoutControls
-  end try
+  layoutControls
 end resizeStack
 
 on clearControls
@@ -65,7 +59,7 @@ on createControls
   /* Clean up stack */
   clearControls
 
-  set the backgroundcolor of me to "0,120,200"
+  set the backgroundcolor of me to "34, 42, 53"
 
   create field "stateField" in card "preGame"
   set the lockText of field "stateField" to true
@@ -88,6 +82,7 @@ on createControls
   set the autohilite of widget "playersPolylist" to false
   set the blendLevel of widget "playersPolylist" to 8
   set the plitemcolor of widget "playersPolylist" to "0,0,0,0"
+  set the enableImageCache of widget "playersPolylist" to false
 
   set the width of the templategraphic to 4
   set the opaque of the templategraphic to true
@@ -104,67 +99,151 @@ on createControls
 end createControls
 
 on layoutControls
-  set the minWidth of this stack to the number of items of sSettings["visibleSections"] * 100
-  set the minHeight of this stack to 300
-  if the width of this stack < the minWidth of this stack then
-    set the width of this stack to the minWidth of this stack
-  end if
-  if the height of this stack < the minHeight of this stack then
-    set the height of this stack to the minHeight of this stack
-  end if
+  try
+    set the minWidth of this stack to the number of items of sSettings["visibleSections"] * 100
+    set the minHeight of this stack to 300
+    if the width of this stack < the minWidth of this stack then
+      set the width of this stack to the minWidth of this stack
+    end if
+    if the height of this stack < the minHeight of this stack then
+      set the height of this stack to the minHeight of this stack
+    end if
 
-  /* set field rect */
-  set the width of field "stateField" to the width of me
-  set the height of field "stateField" to 35
-  set the topLeft of field "stateField" to 0, 0
-  
-  /* set group rect */
-  set the width of group "playersGroup" to the width of me
-  set the height of group "playersGroup" to the height of me - 35
-  set the topLeft of group "playersGroup" to 0, 35
+    /* set field rect */
+    set the width of field "stateField" to the width of me
+    set the height of field "stateField" to 35
+    set the topLeft of field "stateField" to 0, 0
+    
+    /* set group rect */
+    set the width of group "playersGroup" to the width of me
+    set the height of group "playersGroup" to the height of me - 35
+    set the topLeft of group "playersGroup" to 0, 35
 
-  /* set polylist rect */
-  set the width of widget "playersPolylist" to the width of group "playersGroup"
-  set the height of widget "playersPolylist" to the height of group "playersGroup"
-  set the topLeft of widget "playersPolylist" to the topLeft of group "playersGroup"
+    /* set polylist rect */
+    set the width of widget "playersPolylist" to the width of group "playersGroup"
+    set the height of widget "playersPolylist" to the height of group "playersGroup"
+    set the topLeft of widget "playersPolylist" to the topLeft of group "playersGroup"
 
-  local tItemHeight, tRows
-  put max(1,the numberofelements of widget "playersPolylist") into tRows
-  put ((the height of me - 35 - ((the margin of widget "playersPolylist" + the borderWidth of widget "playersPolylist") * tRows)) / (tRows)) into tItemHeight
-  put min(max(tItemHeight, 25), 50) into tItemHeight
-  set the itemHeight of widget "playersPolylist" to tItemHeight
+    local tItemHeight, tRows
+    put max(1,the numberofelements of widget "playersPolylist") into tRows
+    put ((the height of me - 35 - ((the margin of widget "playersPolylist" + the borderWidth of widget "playersPolylist") * tRows)) / (tRows)) into tItemHeight
+    put min(max(tItemHeight, 100), 200) into tItemHeight
+    set the itemHeight of widget "playersPolylist" to tItemHeight
+
+    set the dataLayout of widget "playersPolylist" to getPolylistDataLayout()
+  catch tErr
+    createControls
+    layoutControls
+  end try
 end layoutControls
 
 on setupPolylist
-  set the tsvData of widget "playersPolylist" to getTsvData(sTeams)
+  set the dataContent of widget "playersPolylist" to getPolylistData(sTeams)
   set the dataLayout of widget "playersPolylist" to getPolylistDataLayout()
   layoutControls
 end setupPolylist
 
+function itemHeightPercentToPixels pItemHeight, pPercent
+  return round(pPercent * pItemHeight) & "px"
+end itemHeightPercentToPixels
+
 function getPolylistDataLayout
-  local rDataLayout
+  local rDataLayout, tItemHeight
+  put the itemHeight of widget "playersPolylist" into tItemHeight
 
-  put "background" into rDataLayout[1]["name"]
-  put "100" into rDataLayout[1]["height"]
-  put "0" into rDataLayout[1]["top"]
-  put "0" into rDataLayout[1]["left"]
-  put "100" into rDataLayout[1]["width"]
-  put "color" into rDataLayout[1]["content-type"]
+  put "agent" into rDataLayout[1]["name"]
+  put itemHeightPercentToPixels(tItemHeight, 0.6) into rDataLayout[1]["width"]
+  put itemHeightPercentToPixels(tItemHeight, 0.6) into rDataLayout[1]["height"]
+  put "20px" into rDataLayout[1]["left"]
+  put itemHeightPercentToPixels(tItemHeight, 0.2) into rDataLayout[1]["top"]
+  put "image-data" into rDataLayout[1]["content-type"]
+  put "scale-down" into rDataLayout[1]["content-fit"]
 
-  local tColumnCount
-  put 0 into tColumnCount
-  repeat for each item tColumn in sSettings["visibleSections"]
-    local tCurrentColumn
-    put tColumn into tCurrentColumn["name"]
-    put "100" into tCurrentColumn["height"]
-    put "0" into tCurrentColumn["top"]
-    put (round(100 / the number of items of sSettings["visibleSections"]) * tColumnCount)  into tCurrentColumn["left"]
-    put round(100 / the number of items of sSettings["visibleSections"]) into tCurrentColumn["width"]
-    put "center" into tCurrentColumn["align"]
-    put "text-multiline" into tCurrentColumn["content-type"]
-    appendArray rDataLayout, tCurrentColumn
-    add 1 to tColumnCount
-  end repeat
+  put "party" into rDataLayout[2]["name"]
+  put itemHeightPercentToPixels(tItemHeight, 0.8) into rDataLayout[2]["width"]
+  put itemHeightPercentToPixels(tItemHeight, 0.8) into rDataLayout[2]["height"]
+  put "10px" into rDataLayout[2]["left"]
+  put itemHeightPercentToPixels(tItemHeight, 0.1) into rDataLayout[2]["top"]
+  put "image-file" into rDataLayout[2]["content-type"]
+  put "scale-down" into rDataLayout[2]["content-fit"]
+  put true into rDataLayout[2]["dropShadow"]
+
+  put "team" into rDataLayout[3]["name"]
+  put itemHeightPercentToPixels(tItemHeight, 0.8) into rDataLayout[3]["width"]
+  put itemHeightPercentToPixels(tItemHeight, 0.8) into rDataLayout[3]["height"]
+  put "10px" into rDataLayout[3]["left"]
+  put itemHeightPercentToPixels(tItemHeight, 0.1) into rDataLayout[3]["top"]
+  put "image-file" into rDataLayout[3]["content-type"]
+  put "scale-down" into rDataLayout[3]["content-fit"]
+  put true into rDataLayout[3]["dropShadow"]
+
+  put "level" into rDataLayout[4]["name"]
+  put itemHeightPercentToPixels(tItemHeight, 0.25) into rDataLayout[4]["width"]
+  put itemHeightPercentToPixels(tItemHeight, 0.15) into rDataLayout[4]["height"]
+  put itemHeightPercentToPixels(tItemHeight, 0.65) into rDataLayout[4]["left"]
+  put itemHeightPercentToPixels(tItemHeight, 0.1) into rDataLayout[4]["bottom"]
+  put "text" into rDataLayout[4]["content-type"]
+  put "rounded-rectangle" into rDataLayout[4]["fill-type"]
+  put "29,99,32,255" into rDataLayout[4]["fill-color"]
+  put "5" into rDataLayout[4]["fill-cornerRadius"]
+  put round(0.1 * tItemHeight) into rDataLayout[4]["text-size"]
+  put "center" into rDataLayout[4]["align"]
+  put "255,255,255,255" into rDataLayout[4]["color"]
+  put true into rDataLayout[4]["dropShadow"]
+  put true into rDataLayout[4]["fill"]
+
+  put "username" into rDataLayout[5]["name"]
+  put itemHeightPercentToPixels(tItemHeight, 0.1) into rDataLayout[5]["top"]
+  put itemHeightPercentToPixels(tItemHeight, 1) into rDataLayout[5]["left"]
+  put round(0.3 * tItemHeight) into rDataLayout[5]["text-size"]
+  put "255,255,255,200" into rDataLayout[5]["color"]
+  put "50" into rDataLayout[5]["width"]
+  put itemHeightPercentToPixels(tItemHeight, 0.3) into rDataLayout[5]["height"]
+
+  put "rank" into rDataLayout[6]["name"]
+  put itemHeightPercentToPixels(tItemHeight, 0.7) into rDataLayout[6]["width"]
+  put itemHeightPercentToPixels(tItemHeight, 0.7) into rDataLayout[6]["height"]
+  put "10px" into rDataLayout[6]["right"]
+  put itemHeightPercentToPixels(tItemHeight, 0.1) into rDataLayout[6]["top"]
+  put "image-data" into rDataLayout[6]["content-type"]
+  put "scale-down" into rDataLayout[6]["content-fit"]
+  put true into rDataLayout[6]["dropShadow"]
+
+  put "rr" into rDataLayout[7]["name"]
+  put "0px" into rDataLayout[7]["bottom"]
+  put "center" into rDataLayout[7]["align"]
+  put "10px" into rDataLayout[7]["right"]
+  put round(0.18 * tItemHeight) into rDataLayout[7]["text-size"]
+  put "255,255,255,200" into rDataLayout[7]["color"]
+  put itemHeightPercentToPixels(tItemHeight, 0.7) into rDataLayout[7]["width"]
+  put itemHeightPercentToPixels(tItemHeight, 0.3) into rDataLayout[7]["height"]
+
+  put "peakText" into rDataLayout[8]["name"]
+  put itemHeightPercentToPixels(tItemHeight, 0.3) into rDataLayout[8]["height"]
+  put itemHeightPercentToPixels(tItemHeight, 0.4) into rDataLayout[8]["width"]
+  put round(0.18 * tItemHeight) into rDataLayout[8]["text-size"]
+  put "right" into rDataLayout[8]["align"]
+  put itemHeightPercentToPixels(tItemHeight, 1) into rDataLayout[8]["left"]
+  put itemHeightPercentToPixels(tItemHeight, 0.15) into rDataLayout[8]["bottom"]
+  put "255,255,255,200" into rDataLayout[8]["color"]
+
+  put "peak" into rDataLayout[9]["name"]
+  put itemHeightPercentToPixels(tItemHeight, 0.35) into rDataLayout[9]["width"]
+  put itemHeightPercentToPixels(tItemHeight, 0.35) into rDataLayout[9]["height"]
+  put itemHeightPercentToPixels(tItemHeight, 1.5) into rDataLayout[9]["left"]
+  put itemHeightPercentToPixels(tItemHeight, 0.25) into rDataLayout[9]["bottom"]
+  put "image-data" into rDataLayout[9]["content-type"]
+  put "scale-down" into rDataLayout[9]["content-fit"]
+  put true into rDataLayout[9]["dropShadow"]
+
+  put "peakAct" into rDataLayout[10]["name"]
+  put itemHeightPercentToPixels(tItemHeight, 0.3) into rDataLayout[10]["height"]
+  put itemHeightPercentToPixels(tItemHeight, 0.35) into rDataLayout[10]["width"]
+  put round(0.14 * tItemHeight) into rDataLayout[10]["text-size"]
+  put "center" into rDataLayout[10]["align"]
+  put itemHeightPercentToPixels(tItemHeight, 1.5) into rDataLayout[10]["left"]
+  put "0px" into rDataLayout[10]["bottom"]
+  put "255,255,255,200" into rDataLayout[10]["color"]
 
   return rDataLayout
 end getPolylistDataLayout
@@ -314,108 +393,107 @@ function capitalizeWords pString
   return tCapString
 end capitalizeWords
 
-function getTsvData pTeams
+function getPolylistData pTeams
   if pTeams["myTeam"] is empty then
     return empty
   end if
 
-  local tTsvData, tPartyCount
+  local tData, tPartyCount, tParties
   put 1 into tPartyCount
-  put empty into tTsvData
-
-  /* Create tsv headers */
-  put "background" & tab after tTsvData
-  put "agent" & tab after tTsvData
-  put "name" & tab after tTsvData
-  put "rank" & tab after tTsvData
-  put "peak" & tab after tTsvData
-  put "winrate" & tab after tTsvData
-  put "level" & return after tTsvData
-
-  /* Create visible headers */
-  put empty & tab after tTsvData
-  put "Agent" & tab after tTsvData
-  put "Name" & tab after tTsvData
-  put "Rank" & tab after tTsvData
-  put "Peak" & tab after tTsvData
-  put "Winrate" & tab after tTsvData
-  put "Level" & return after tTsvData
+  put empty into tData
 
   local tMyTeam
   put pTeams[pTeams["myTeam"]] into tMyTeam
 
-  put teamToTsv(tMyTeam, sSettings["blueColor"], tPartyCount) after tTsvData
-  
-  return tTsvData
-end getTsvData
-
-function teamToTsv pTeam, pDefaultColor, @xPartyCount
-  local rTsvData
-  repeat for each element tParty in pTeam
+  local pTeamName, tParty
+  put "blue" into pTeamName
+  repeat for each key tPartyID in tMyTeam
+    put tMyTeam[tPartyID] into tParty
     repeat for each element tTeammate in tParty
-      /* Background */
-      if tTeammate["UUID"] is sPUUID then
-        put sSettings["myColor"] & tab after rTsvData
+      local tPlayerData
+      put empty into tPlayerData
+      
+      /* Agent Icon */
+      if tTeammate["agentIcon"] is not empty then
+        put tTeammate["agentIcon"] into tPlayerData["agent"]
+      end if
+      
+      /* Party */
+      if the number of elements of tParty is 1 or sSettings["showParties"] is false then
+        put "assets/agentborders/parties/noparty_" & pTeamName & ".png" into tPlayerData["party"]
       else
-        if the number of elements of tParty is 1 or sSettings["showParties"] is false then
-          put pDefaultColor & tab after rTsvData
+        if tPartyID is among the keys of tParties then
+          put "assets/agentborders/parties/party" & tParties[tPartyID] & ".png" into tPlayerData["party"]
         else
-          put blendColors(pDefaultColor, sSettings["partyColors"][xPartyCount]) & tab after rTsvData
+          put "assets/agentborders/parties/party" & tPartyCount & ".png" into tPlayerData["party"]
+          put tPartyCount into tParties[tPartyID]
+          add 1 to tPartyCount
         end if
       end if
       
-      /* Agent */
-      put tTeammate["agent"] & tab after rTsvData
-      
-      /* Name */
-      if sSettings["alwaysShowName"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID  then
-        put tTeammate["name"] & tab after rTsvData
-      else
-        put "--" & tab after rTsvData
-      end if
-      
-      /* Rank */
-      if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID  then
-        if tTeammate["stats"]["rr"] is "N/A" or tTeammate["stats"]["rank"] is "Unranked" then
-          put tTeammate["stats"]["rank"] & tab after rTsvData
-        else
-          put tTeammate["stats"]["rank"] & "(" & tTeammate["stats"]["rr"] & ")" & tab after rTsvData
-        end if
-      else
-        put "--" & tab after rTsvData
-      end if
-
-      /* Peak */
-      if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID  then
-        put tTeammate["stats"]["peak"] & tab after rTsvData
-      else
-        put "--" & tab after rTsvData
-      end if
-      
-      /* Winrate */
-      if sSettings["alwaysShowWinrate"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID  then
-        if tTeammate["stats"]["wr"] is -1 then
-          put "N/A" & tab after rTsvData
-        else
-          put round(tTeammate["stats"]["wr"] * 100) & "%" & tab after rTsvData
-        end if
-      else
-        put "--" & tab after rTsvData
-      end if
+      /* Team */
+      put "assets/agentborders/teams/" & pTeamName & ".png" into tPlayerData["team"]
 
       /* Level */
       if sSettings["alwaysShowLevel"] or tTeammate["hiddenLevel"] is false or tTeammate["uuid"] is sPUUID then
-        put tTeammate["level"] & return after rTsvData
+        put tTeammate["level"] into tPlayerData["level"]
       else
-        put "--" & return after rTsvData
+        put "--" into tPlayerData["level"]
       end if
+      
+      /* Name */
+      if sSettings["alwaysShowName"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID then
+        put tTeammate["name"] into tPlayerData["username"]
+      else
+        put "--" into tPlayerData["username"]
+      end if
+      
+      /* Rank Icon */
+      if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID then
+        put tTeammate["stats"]["rankIcon"] into tPlayerData["rank"]
+      else
+        put empty into tPlayerData["rank"]
+      end if
+      
+      /* RR */
+      if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID then
+        if tTeammate["stats"]["rr"] is "N/A" or tTeammate["stats"]["rank"] is "Unranked" then
+          put empty into tPlayerData["rr"]
+        else
+          put tTeammate["stats"]["rr"] & "rr" into tPlayerData["rr"]
+        end if
+      else
+        put empty into tPlayerData["rr"]
+      end if
+
+      /* Peak Text */
+      if tTeammate["stats"]["peakEpisode"] is empty or tTeammate["stats"]["peakAct"] is empty then
+        put empty into tPlayerData["peakText"]
+        appendArray tData, tPlayerData
+        next repeat
+      end if
+      put "Peak" into tPlayerData["peakText"]
+
+      /* Peak Icon */
+      if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID then
+        put tTeammate["stats"]["peakIcon"] into tPlayerData["peak"]
+      else
+        put empty into tPlayerData["peak"]
+      end if
+
+      /* Peak Act/Episode */
+      if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID then
+        put "e" & tTeammate["stats"]["peakEpisode"] & "a" & tTeammate["stats"]["peakAct"] into tPlayerData["peakAct"]
+      else
+        put empty into tPlayerData["peakAct"]
+      end if
+
+      appendArray tData, tPlayerData
     end repeat
-    if the number of elements of tParty > 1 then
-      add 1 to xPartyCount
-    end if
   end repeat
-  return rTsvData
-end teamToTsv
+  
+  return tData
+end getPolylistData
 
 on mainLoop
   local tPresences, tPrivatePresence, tGameState
