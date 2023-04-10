@@ -1284,3 +1284,19 @@ on mouseUp pButton
     popup button "rightClickMenu" at the mouseloc
   end if
 end mouseUp
+
+function presenceToQueueType pPresence
+  if pPresence["provisioningFlow"] is "CustomGame" then
+    return "Custom Game"
+  else
+    if pPresence["partyState"] is "CUSTOM_GAME_SETUP" then
+      return "Custom Game"
+    end if
+    local tGamemode
+    put pPresence["queueid"] into tGamemode
+    if tGamemode is "ggteam" then
+      return "Escalation"
+    end if
+    return tGamemode
+  end if
+end presenceToQueueType

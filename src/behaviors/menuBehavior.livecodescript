@@ -328,11 +328,7 @@ on mainLoop
     put getPartyMemberData(tPresences, tDidFail) into sParty
 
     local tGamemode
-    if tPrivatePresence["provisioningFlow"] is "CustomGame" then
-      put "Custom Game" into tGamemode
-    else
-      put tPrivatePresence["queueid"] into tGamemode
-    end if
+    put presenceToQueueType(tPrivatePresence) into tGamemode
 
     set the text of field "stateField" to "Menu" & space & slash & slash & space & capitalizeWords(tGamemode)
 

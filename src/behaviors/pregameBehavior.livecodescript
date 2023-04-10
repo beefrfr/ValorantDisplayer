@@ -405,11 +405,7 @@ on mainLoop
     put getPreGameTeam(sMatchID, tPresences, tDidFail) into sTeams
 
     local tGamemode
-    if tPrivatePresence["provisioningFlow"] is "CustomGame" then
-      put "Custom Game" into tGamemode
-    else
-      put tPrivatePresence["queueid"] into tGamemode
-    end if
+    put presenceToQueueType(tPrivatePresence) into tGamemode
 
     set the text of field "stateField" to capitalizeWords(tGamemode) & space & slash & slash & space & capitalizeWords(sTeams["map"])
 
