@@ -1122,3 +1122,120 @@ function getGameState
   put tPrivatePresence["sessionLoopState"] into tGameState
   return tGameState
 end getGameState
+
+on toggleVisibleSection pSection
+  set wholematches to true
+  if pSection is among the items of sSettings["visibleSections"] then
+    delete item itemoffset(pSection,sSettings["visibleSections"]) of sSettings["visibleSections"]
+  else
+    put comma & pSection after sSettings["visibleSections"]
+  end if
+end toggleVisibleSection
+
+function capitalizeWords pString
+  local tCapString
+  put empty into tCapString
+  repeat for each word tWord in pString
+    put toUpper(character 1 of tWord) & (character 2 to -1 of tWord) & space after tCapString
+  end repeat
+  if the last character of tCapString is space then delete the last character of tCapString
+  return tCapString
+end capitalizeWords
+
+on menuPick pChosenItem
+  set the itemdelimiter to "|"
+  if item 1 of pChosenItem is "Bannable Settings" then
+    switch item 2 of pChosenItem
+    case "Show Hidden Ranks"
+      put not sSettings["alwaysShowRank"] into sSettings["alwaysShowRank"]
+      break
+    case "Show Hidden Names"
+      put not sSettings["alwaysShowName"] into sSettings["alwaysShowName"]
+      break
+    case "Show Hidden Levels"
+      put not sSettings["alwaysShowLevel"] into sSettings["alwaysShowLevel"]
+      break
+    end switch
+  else if item 1 of pChosenItem is "Parties" then
+    switch item 2 of pChosenItem
+    case "Dye"
+      put not sSettings["showParties"] into sSettings["showParties"]
+      break
+    case "Number"
+      toggleVisibleSection "party"
+      break
+    end switch
+  else if item 1 of pChosenItem is "Visible Weapons" then
+    toggleVisibleSection (item 2 of pChosenItem)
+  else
+    toggleVisibleSection (item 1 of pChosenItem)
+  end if
+  saveSettings
+  set the itemdelimiter to comma
+end menuPick
+
+function generateRightClickMenu
+  local tMenu
+  put empty into tMenu
+
+  put "(Visible Sections" & return after tMenu
+  repeat for each item tItem in "agent,name,rank,peak,winrate,level"
+    if tItem is among the items of sSettings["visibleSections"] then
+      put "!c" & capitalizeWords(tItem) & return after tMenu
+    else
+      put capitalizeWords(tItem) & return after tMenu
+    end if
+  end repeat
+
+  put "Visible Weapons" & return after tMenu
+  repeat for each item tWeapon in getWeaponList()
+    if tWeapon is among the items of sSettings["visibleSections"] then
+      put tab & "!c" & capitalizeWords(tWeapon) & return after tMenu
+    else
+      put tab & capitalizeWords(tWeapon) & return after tMenu
+    end if
+  end repeat
+  put "-" & return after tMenu
+
+  put "Parties" & return after tMenu
+  if sSettings["showParties"] is true then
+    put tab & "!cDye" & return after tMenu
+  else
+    put tab & "Dye" & return after tMenu
+  end if
+  if "party" is among the items of sSettings["visibleSections"] then
+    put tab & "!cNumber" & return after tMenu
+  else
+    put tab & "Number" & return after tMenu
+  end if
+  put "-" & return after tMenu
+
+  put "Bannable Settings" & return after tMenu
+  put tab & "(These settings are against Valorant" & return after tMenu
+  put tab & "(TOS and may result in a ban" & return after tMenu
+  if sSettings["alwaysShowRank"] is true then
+    put tab & "!cShow Hidden Ranks" & return after tMenu
+  else
+    put tab & "Show Hidden Ranks" & return after tMenu
+  end if
+
+  if sSettings["alwaysShowName"] is true then
+    put tab & "!cShow Hidden Names" & return after tMenu
+  else
+    put tab & "Show Hidden Names" & return after tMenu
+  end if
+
+  if sSettings["alwaysShowLevel"] is true then
+    put tab & "!cShow Hidden Levels" & return after tMenu
+  else
+    put tab & "Show Hidden Levels" & return after tMenu
+  end if
+  return tMenu
+end generateRightClickMenu
+
+on mouseUp pButton
+  if pButton is 3 then
+    set the text of button "rightClickMenu" to generateRightClickMenu()
+    popup button "rightClickMenu" at the mouseloc
+  end if
+end mouseUp
