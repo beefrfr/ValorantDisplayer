@@ -15,6 +15,7 @@ global sSeasons
 global sActs
 global sFetchDataCache
 global sShouldCache
+global sDefaultSettings
 
 /* Stack script */
 
@@ -58,20 +59,19 @@ function getSettings
     create folder tValorantDisplayerFolder
   end if
 
-  local tDefaultSettings
-  put empty into tDefaultSettings
-  put "vandal" into tDefaultSettings["favouriteWeapon"]
-  put false into tDefaultSettings["alwaysShowName"]
-  put false into tDefaultSettings["alwaysShowRank"]
-  put false into tDefaultSettings["alwaysShowLevel"]
-  put false into tDefaultSettings["alwaysShowWinrate"]
-  put true into tDefaultSettings["showParties"]
+  put empty into sDefaultSettings
+  put "vandal" into sDefaultSettings["favouriteWeapon"]
+  put false into sDefaultSettings["alwaysShowName"]
+  put false into sDefaultSettings["alwaysShowRank"]
+  put false into sDefaultSettings["alwaysShowLevel"]
+  put false into sDefaultSettings["alwaysShowWinrate"]
+  put true into sDefaultSettings["showParties"]
 
   local tSettingsFile
   put (tValorantDisplayerFolder & slash & "settings.json") into tSettingsFile
   if there is not a file tSettingsFile then
-    put tDefaultSettings into sSettings
-    put jsonExport(tDefaultSettings) into URL("file:" & tSettingsFile)
+    put sDefaultSettings into sSettings
+    put jsonExport(sDefaultSettings) into URL("file:" & tSettingsFile)
   else
     local tSettingsContents
     put URL("file:" & tSettingsFile) into tSettingsContents
@@ -79,9 +79,9 @@ function getSettings
 
     local tSettingsChanged
     put false into tSettingsChanged
-    repeat for each key tKey in tDefaultSettings
+    repeat for each key tKey in sDefaultSettings
       if tKey is not among the keys of sSettings then
-        put tDefaultSettings[tKey] into sSettings[tkey]
+        put sDefaultSettings[tKey] into sSettings[tkey]
         put true into tSettingsChanged
       end if
     end repeat
@@ -441,25 +441,57 @@ function getWeapons
     return true
   end if
   put empty into sWeaponList
+
+  local tDownloadedFolder, tWeaponsFolder
+  put specialfolderpath("resources") & "/assets/downloaded" into tDownloadedFolder
+  put tDownloadedFolder & "/weapons" into tWeaponsFolder
+  if there is not a folder tDownloadedFolder then
+    create folder tDownloadedFolder
+  end if
+  if there is not a folder tWeaponsFolder then
+    create folder tWeaponsFolder
+  end if
+
   local tRawWeapons
   put fetchData("custom", "https://valorant-api.com/v1/weapons", "get") into tRawWeapons
   if tRawWeapons is false then
     return false
   end if
   repeat for each element tWeapon in tRawWeapons["data"]
-    local tWeaponName
-    put tWeapon["DisplayName"] into tWeaponName
-    put tWeaponName & comma after sWeaponList
+    local tIconPath, tIconData, tIconLocalPath
+    put tWeapon["DisplayName"] & comma after sWeaponList
+
     repeat for each element tSkin in tWeapon["skins"]
       local tSkinName, tSkinUUID
       put tSkin["DisplayName"] into tSkinName
       put tSkin["uuid"] into tSkinUUID
-      put tWeaponName into sWeapons[tSkinUUID]["Weapon"]
+      put tWeapon["DisplayName"] into sWeapons[tSkinUUID]["Weapon"]
       put tSkinName into sWeapons[tSkinUUID]["Skin"]
       put tSkinUUID into sWeapons[tSkinUUID]["uuid"]
+
+      put tSkin["displayIcon"] into tIconPath
+      put tWeaponsFolder & "/weapon_" & tWeapon["DisplayName"] & "_" & tSkin["DisplayName"] & ".data" into tIconLocalPath
+      if there is a file tIconLocalPath then
+        put base64Decode(URL("file:" & tIconLocalPath)) into sWeapons[tSkinUUID]["icon"]
+        next repeat
+      end if
+
+      put fetchData("custom",tIconPath,"GET", false) into tIconData
+      if tIconData is false then
+        put tIconData into sWeapons[tSkinUUID]["icon"]
+        next repeat
+      end if
+      put base64Encode(tIconData) into URL("file:" & tIconLocalPath)
+      put tIconData into sWeapons[tSkinUUID]["icon"]
     end repeat
   end repeat
   if the last character of sWeaponList is comma then delete the last character of sWeaponList
+
+  /* Check Settings */
+  if sSettings["favouriteWeapon"] is not among the items of sWeaponList then
+    put sDefaultSettings["favouriteWeapon"] into sSettings["favouriteWeapon"]
+  end if
+
   return true
 end getWeapons
 
