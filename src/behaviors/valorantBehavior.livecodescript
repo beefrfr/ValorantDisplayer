@@ -405,7 +405,7 @@ function getRanks
       put tRank["largeIcon"] into tIconPath
       put tRanksFolder & "/rank_" & tRank["tierName"] & ".data" into tIconLocalPath
       if there is a file tIconLocalPath then
-        put URL("file:" & tIconLocalPath) into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
+        put base64Decode(URL("file:" & tIconLocalPath)) into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
         next repeat
       end if
 
@@ -414,7 +414,7 @@ function getRanks
         put tIconData into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
         next repeat
       end if
-      put tIconData into URL("file:" & tIconLocalPath)
+      put base64Encode(tIconData) into URL("file:" & tIconLocalPath)
       put tIconData into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
     end repeat
     add 1 to tEpisodeCount
@@ -480,7 +480,7 @@ function getAgents
     put tAgent["displayIconSmall"] into tIconPath
     put tAgentsFolder & "/agent_" & tAgent["displayName"] & ".data" into tIconLocalPath
     if there is a file tIconLocalPath then
-      put URL("file:" & tIconLocalPath) into sAgents[tAgent["uuid"]]["icon"]
+      put base64Decode(URL("file:" & tIconLocalPath)) into sAgents[tAgent["uuid"]]["icon"]
       next repeat
     end if
 
@@ -489,7 +489,7 @@ function getAgents
       put tIconData into sAgents[tAgent["uuid"]]["icon"]
       next repeat
     end if
-    put tIconData into URL("file:" & tIconLocalPath)
+    put base64Encode(tIconData) into URL("file:" & tIconLocalPath)
     put tIconData into sAgents[tAgent["uuid"]]["icon"]
   end repeat
   return true
