@@ -48,7 +48,9 @@ on openStack
   put empty into sFetchDataCache
   useCache
   send "goToPreLoad" to me in 5 milliseconds
+end openStack
 
+function getSettings
   /* Load Settings */
   local tValorantDisplayerFolder
   put specialfolderpath("resources") into tValorantDisplayerFolder
@@ -56,31 +58,20 @@ on openStack
     create folder tValorantDisplayerFolder
   end if
 
+  local tDefaultSettings
+  put empty into tDefaultSettings
+  put "vandal" into tDefaultSettings["favouriteWeapon"]
+  put false into tDefaultSettings["alwaysShowName"]
+  put false into tDefaultSettings["alwaysShowRank"]
+  put false into tDefaultSettings["alwaysShowLevel"]
+  put false into tDefaultSettings["alwaysShowWinrate"]
+  put true into tDefaultSettings["showParties"]
+
   local tSettingsFile
   put (tValorantDisplayerFolder & slash & "settings.json") into tSettingsFile
   if there is not a file tSettingsFile then
-    put empty into sSettings
-    put "255,215,180,255" into sSettings["partyColors"][1]
-    put "60,180,75,255" into sSettings["partyColors"][2]
-    put "145,30,80,255" into sSettings["partyColors"][3]
-    put "240,50,30,255" into sSettings["partyColors"][4]
-    put "245,130,38,255" into sSettings["partyColors"][5]
-    put "128,0,0,255" into sSettings["partyColors"][6]
-    put "210,245,60,255" into sSettings["partyColors"][7]
-
-    put "agent,name,Vandal,Phantom,rank,peak,winrate,level" into sSettings["visibleSections"]
-
-    put "0,0,255,128" into sSettings["blueColor"]
-    put "255,0,0,128" into sSettings["redColor"]
-    put "128,128,0,128" into sSettings["myColor"]
-
-    put false into sSettings["alwaysShowName"]
-    put false into sSettings["alwaysShowRank"]
-    put false into sSettings["alwaysShowLevel"]
-    put false into sSettings["alwaysShowWinrate"]
-    put true into sSettings["showParties"]
-
-    put jsonExport(sSettings) into URL("file:" & tSettingsFile)
+    put tDefaultSettings into sSettings
+    put jsonExport(tDefaultSettings) into URL("file:" & tSettingsFile)
   else
     local tSettingsContents
     put URL("file:" & tSettingsFile) into tSettingsContents
@@ -88,35 +79,9 @@ on openStack
 
     local tSettingsChanged
     put false into tSettingsChanged
-    if "visibleSections" is not among the keys of sSettings or sSettings["visibleSections"] is empty then
-      put "agent,name,Vandal,Phantom,rank,peak,wr,level" into sSettings["visibleSections"]
-      put true into tSettingsChanged
-    end if
-
-    if "blueColor" is not among the keys of sSettings or sSettings["blueColor"] is empty then
-      put "0,0,255,128" into sSettings["blueColor"]
-      put true into tSettingsChanged
-    end if
-
-    if "redColor" is not among the keys of sSettings or sSettings["redColor"] is empty then
-      put "255,0,0,128" into sSettings["redColor"]
-      put true into tSettingsChanged
-    end if
-
-    if "myColor" is not among the keys of sSettings or sSettings["myColor"] is empty then
-      put "128,128,0,128" into sSettings["myColor"]
-      put true into tSettingsChanged
-    end if
-
-    if "showParties" is not among the keys of sSettings or sSettings["showParties"] is empty then
-      put true into sSettings["showParties"]
-      put true into tSettingsChanged
-    end if
-
-    /* Check always show */
-    repeat for each item tAlways in "alwaysShowName,alwaysShowRank,alwaysShowLevel,alwaysShowWinrate"
-      if tAlways is not among the keys of sSettings or sSettings[tAlways] is empty then
-        put false into sSettings[tAlways]
+    repeat for each key tKey in tDefaultSettings
+      if tKey is not among the keys of sSettings then
+        put tDefaultSettings[tKey] into sSettings[tkey]
         put true into tSettingsChanged
       end if
     end repeat
@@ -125,7 +90,8 @@ on openStack
       put jsonExport(sSettings) into URL("file:" & tSettingsFile)
     end if
   end if
-end openStack
+  return true
+end getSettings
 
 on saveSettings
   local tSettingsFile, tValorantDisplayerFolder

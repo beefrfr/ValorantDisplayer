@@ -81,7 +81,7 @@ on createControls
   create graphic "progressBarProgress" in card "preLoad"
   set the backgroundcolor of graphic "progressBarProgress" to "153,41,41"
   set the cProgressBarCount of graphic "progressBarProgress" to 0
-  set the cProgressBarMax of graphic "progressBarProgress" to 9
+  set the cProgressBarMax of graphic "progressBarProgress" to 10
 end createControls
 
 on layoutControls
@@ -136,6 +136,16 @@ on main
   local tStep, tErrorCount
   repeat while tGeneralSetup is false
   	put 0 into tErrorCount
+		setStatus "Loading settings", tStep
+	  repeat while getSettings() is false and tErrorCount < 25
+	  	wait 25 milliseconds with messages
+	  	add 1 to tErrorCount
+	  end repeat
+	  if tErrorCount > 25 then
+	  	next repeat
+	  end if
+	  add 1 to tStep
+
 		setStatus "Getting rank data", tStep
 	  repeat while getRanks() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
