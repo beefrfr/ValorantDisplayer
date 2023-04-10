@@ -156,27 +156,33 @@ end gotoPreLoad
 
 on redirect
   if isRunning() then
-    valorantSetup
-    local tPresences, tPrivatePresence, tGameState
-    put getPresences() into tPresences
-    put getPrivatePresence(pPresences) into tPrivatePresence
-    put tPrivatePresence["sessionLoopState"] into tGameState
+    repeat while true
+      valorantSetup
+      local tPresences, tPrivatePresence, tGameState
+      put getPresences() into tPresences
+      put getPrivatePresence(tPresences) into tPrivatePresence
+      put tPrivatePresence["sessionLoopState"] into tGameState
 
-    if not isRunning() then
-      exit redirect
-    end if
+      if not isRunning() then
+        exit redirect
+      end if
 
-    switch tGameState
-      case "MENUS"
-        goToMenu
-        break
-      case "PREGAME"
-        goToPreGame
-        break
-      case "INGAME"
-            goToInGame
-        break
-    end switch
+      switch tGameState
+        case "MENUS"
+          goToMenu
+          exit redirect
+          break
+        case "PREGAME"
+          goToPreGame
+          exit redirect
+          break
+        case "INGAME"
+          goToInGame
+          exit redirect
+          break
+      end switch
+      breakpoint
+  end repeat
   end if
 end redirect
 
@@ -202,21 +208,15 @@ on goToPreGame
 end goToPreGame
 
 /* Valorant Information */
-on valorantSetup pForce
-  put empty into sTsNetResults
-  if sSetup is false then
-    put true into pForce
-  end if
+on valorantSetup
   put true into sSetup
   if getLockFile() is false then
     put false into sSetup
     exit valorantSetup
   end if
+
   if getHeaders() is false then
     put false into sSetup
-    exit valorantSetup
-  end if
-  if pForce is not true then
     exit valorantSetup
   end if
 
@@ -224,33 +224,10 @@ on valorantSetup pForce
     put false into sSetup
     exit valorantSetup
   end if
+
   if getRegion() is false then
     put false into sSetup
     exit valorantSetup
-  end if
-  if getSeasons() is false then
-    put false into sSetup
-    exit valorantSetup
-  end if
-  if getRanks() is false then
-    put false into sSetup
-    exit valorantSetup
-  end if
-  if getWeapons() is false then
-    put false into sSetup
-    exit valorantSetup
-  end if
-  if getAgents() is false then
-    put false into sSetup
-    exit valorantSetup
-  end if
-  if getMaps() is false then
-    put false into sSetup
-    exit valorantSetup
-  end if
-
-  if not waitForSeconds(0.5, getGameState()) then
-
   end if
 end valorantSetup
 
