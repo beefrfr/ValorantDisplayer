@@ -110,8 +110,8 @@ on layoutControls
 end layoutControls
 
 on setStatus pStatus, pProgress
-	set the text of field "statusField" to pStatus
 	if the cProgressBarCount of graphic "progressBarProgress" < pProgress then
+		set the text of field "statusField" to pStatus
 		local tStep
 		put (pProgress - the cProgressBarCount of graphic "progressBarProgress") / 10 into tStep
 		repeat for 10 times
@@ -128,57 +128,15 @@ on main
 	createControls
 	layoutControls
 	wait 10 milliseconds with messages
+  set the text of field "loadingField" to "Loading"
 
-	local tErrorCount
-	put false into sSetup
-	repeat while sSetup is false
-		put 0 into tErrorCount
-		setStatus "Looking for Valorant Object", 0
-	  repeat while getLockFile() is false and tErrorCount < 25
-	  	wait 25 milliseconds with messages
-	  	add 1 to tErrorCount
-	  end repeat
-	  if tErrorCount > 25 then
-	  	next repeat
-	  end if
-
-	  setStatus "Getting Header data", 1
-	  repeat while getHeaders() is false and tErrorCount < 25
-	  	wait 25 milliseconds with messages
-	  	add 1 to tErrorCount
-	  end repeat
-	  if tErrorCount > 25 then
-	  	next repeat
-	  end if
-
-	  setStatus "Getting current Valorant version", 2
-	  repeat while getCurrentVersion() is false and tErrorCount < 25
-	  	wait 25 milliseconds with messages
-	  	add 1 to tErrorCount
-	  end repeat
-	  if tErrorCount > 25 then
-	  	next repeat
-	  end if
-
-	  setStatus "Getting account region", 3
-	  repeat while getRegion() is false and tErrorCount < 25
-	  	wait 25 milliseconds with messages
-	  	add 1 to tErrorCount
-	  end repeat
-	  if tErrorCount > 25 then
-	  	next repeat
-	  end if
-
-	  setStatus "Getting season data", 4
-	  repeat while getSeasons() is false and tErrorCount < 25
-	  	wait 25 milliseconds with messages
-	  	add 1 to tErrorCount
-	  end repeat
-	  if tErrorCount > 25 then
-	  	next repeat
-	  end if
-
-	  setStatus "Getting rank data", 5
+  local tGeneralSetup
+  put false into tGeneralSetup
+  /* General Loading */
+  local tStep, tErrorCount
+  repeat while tGeneralSetup is false
+  	put 0 into tErrorCount
+		setStatus "Getting rank data", tStep
 	  repeat while getRanks() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -186,8 +144,9 @@ on main
 	  if tErrorCount > 25 then
 	  	next repeat
 	  end if
+	  add 1 to tStep
 
-	  setStatus "Getting weapon data", 6
+	  setStatus "Getting weapon data", tStep
 	  repeat while getWeapons() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -195,8 +154,9 @@ on main
 	  if tErrorCount > 25 then
 	  	next repeat
 	  end if
+	  add 1 to tStep
 
-	  setStatus "Getting agent data", 7
+	  setStatus "Getting agent data", tStep
 	  repeat while getAgents() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -204,8 +164,9 @@ on main
 	  if tErrorCount > 25 then
 	  	next repeat
 	  end if
+	  add 1 to tStep
 
-	  setStatus "Getting map data", 8
+	  setStatus "Getting map data", tStep
 	  repeat while getMaps() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -213,8 +174,77 @@ on main
 	  if tErrorCount > 25 then
 	  	next repeat
 	  end if
+	  add 1 to tStep
+	  put true into tGeneralSetup
+	end repeat
 
-	  setStatus "Setup Complete", 9
+	local tStepForProfile
+	put false into sSetup
+	repeat while sSetup is false
+		put 0 into tErrorCount
+		put tStep into tStepForProfile
+
+	  /* Profile Specific */
+		setStatus "Looking for Riot Client", tStepForProfile
+	  repeat while getLockFile() is false and tErrorCount < 25
+	  	wait 25 milliseconds with messages
+	  	add 1 to tErrorCount
+	  end repeat
+	  if tErrorCount > 25 then
+	  	next repeat
+	  end if
+	  add 1 to tStepForProfile
+
+	  setStatus "Getting Header data", tStepForProfile
+	  repeat while getHeaders() is false and tErrorCount < 25
+	  	wait 25 milliseconds with messages
+	  	add 1 to tErrorCount
+	  end repeat
+	  if tErrorCount > 25 then
+	  	next repeat
+	  end if
+	  add 1 to tStepForProfile
+
+	  setStatus "Getting current Valorant version", tStepForProfile
+	  repeat while getCurrentVersion() is false and tErrorCount < 25
+	  	wait 25 milliseconds with messages
+	  	add 1 to tErrorCount
+	  end repeat
+	  if tErrorCount > 25 then
+	  	next repeat
+	  end if
+	  add 1 to tStepForProfile
+
+	  setStatus "Getting account region", tStepForProfile
+	  repeat while getRegion() is false and tErrorCount < 25
+	  	wait 25 milliseconds with messages
+	  	add 1 to tErrorCount
+	  end repeat
+	  if tErrorCount > 25 then
+	  	next repeat
+	  end if
+	  add 1 to tStepForProfile
+
+	  setStatus "Getting season data", tStepForProfile
+	  repeat while getSeasons() is false and tErrorCount < 25
+	  	wait 25 milliseconds with messages
+	  	add 1 to tErrorCount
+	  end repeat
+	  if tErrorCount > 25 then
+	  	next repeat
+	  end if
+	  add 1 to tStepForProfile
+
+	  set the text of field "loadingField" to "Waiting"
+	  setStatus "Looking for Valorant Process", tStepForProfile
+	  local tPresences, tPrivatePresence, tGameState
+    put getPresences() into tPresences
+    put getPrivatePresence(tPresences) into tPrivatePresence
+    put tPrivatePresence["sessionLoopState"] into tGameState
+    if tGameState is empty then
+    	next repeat
+    end if
+    
 	  put true into sSetup
 	  redirect
 	end repeat

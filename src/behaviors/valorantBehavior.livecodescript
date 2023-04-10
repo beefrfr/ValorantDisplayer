@@ -167,6 +167,11 @@ on redirect
         exit redirect
       end if
 
+      if tGameState is empty then
+        goToPreLoad
+        exit redirect
+      end if
+
       switch tGameState
         case "MENUS"
           goToMenu
@@ -181,7 +186,6 @@ on redirect
           exit redirect
           break
       end switch
-      breakpoint
   end repeat
   end if
 end redirect
