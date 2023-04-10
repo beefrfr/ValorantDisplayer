@@ -157,7 +157,6 @@ end gotoPreLoad
 on redirect
   if isRunning() then
     repeat while true
-      valorantSetup
       local tPresences, tPrivatePresence, tGameState
       put getPresences() into tPresences
       put getPrivatePresence(tPresences) into tPrivatePresence
@@ -168,6 +167,11 @@ on redirect
       end if
 
       if tGameState is empty then
+        goToPreLoad
+        exit redirect
+      end if
+
+      if checkSetup() is false then
         goToPreLoad
         exit redirect
       end if
@@ -212,28 +216,72 @@ on goToPreGame
 end goToPreGame
 
 /* Valorant Information */
-on valorantSetup
-  put true into sSetup
-  if getLockFile() is false then
-    put false into sSetup
-    exit valorantSetup
+function checkSetup
+  if sPdUrl is empty then
+    return false
   end if
-
-  if getHeaders() is false then
-    put false into sSetup
-    exit valorantSetup
+  if sGlzUrl is empty then
+    return false
   end if
-
-  if getCurrentVersion() is false then
-    put false into sSetup
-    exit valorantSetup
+  if sRegion is empty then
+    return false
   end if
-
-  if getRegion() is false then
-    put false into sSetup
-    exit valorantSetup
+  if sCurrentSeason is empty then
+    return false
   end if
-end valorantSetup
+  if sLockName is empty then
+    return false
+  end if
+  if sLockPID is empty then
+    return false
+  end if
+  if sLockPort is empty then
+    return false
+  end if
+  if sLockPassword is empty then
+    return false
+  end if
+  if sLockProtocol is empty then
+    return false
+  end if
+  if sHeaders is empty then
+    return false
+  end if
+  if sPUUID is empty then
+    return false
+  end if
+  if sCurrentVersion is empty then
+    return false
+  end if
+  if sSetup is empty then
+    return false
+  end if
+  if sWeapons is empty then
+    return false
+  end if
+  if sWeaponList is empty then
+    return false
+  end if
+  if sAgents is empty then
+    return false
+  end if
+  if sMaps is empty then
+    return false
+  end if
+  if sRanks is empty then
+    return false
+  end if
+  if sSettings is empty then
+    return false
+  end if
+  if sSeasons is empty then
+    return false
+  end if
+  if sActs is empty then
+    return false
+  end if
+  return true
+end checkSetup
 
 function getRegion
   local tPath
@@ -708,12 +756,13 @@ function getPlayerStats pUUID, @xDidFail
     return tPlayerStats
   end if
   if sCurrentSeason is not among the keys of tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"] then
-    put "Unranked" into tPlayerStats["rank"]
-    put "N/A" into tPlayerStats["rr"]
+    put rankNumberToRank("Unranked", empty) into tPlayerStats["rank"]
+    put rankNumberToImage("Unranked", empty) into tPlayerStats["rankIcon"]
+    put empty into tPlayerStats["rr"]
     put "-1" into tPlayerStats["wr"]
   else
     put rankNumberToRank(tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][sCurrentSeason]["CompetitiveTier"], sCurrentSeason) into tPlayerStats["rank"]
-  put rankNumberToImage(tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][sCurrentSeason]["CompetitiveTier"], sCurrentSeason) into tPlayerStats["rankIcon"]
+    put rankNumberToImage(tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][sCurrentSeason]["CompetitiveTier"], sCurrentSeason) into tPlayerStats["rankIcon"]
     put tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][sCurrentSeason]["RankedRating"] into tPlayerStats["rr"]
 
     local tWR
@@ -809,7 +858,6 @@ function getMatchID pAttempt
 
   if tResult is not false and tResult["errorCode"] is not "RESOURCE_NOT_FOUND" then
     if tResult["errorCode"] is "BAD_CLAIMS" then
-      valorantSetup
       return getMatchID(pAttempt + 1)
     end if
     return tResult["MatchID"]
@@ -828,7 +876,6 @@ function getPreGameID pAttempt
 
   if tResult is not false and tResult["errorCode"] is not "RESOURCE_NOT_FOUND" then
     if tResult["errorCode"] is "BAD_CLAIMS" then
-      valorantSetup
       return getMatchID(pAttempt + 1)
     end if
     return tResult["MatchID"]
@@ -849,7 +896,6 @@ function getMatchStats pMatchID, pAttempt
 
   if tResult is not false and tResult["errorCode"] is not "RESOURCE_NOT_FOUND" then
     if tResult["errorCode"] is "BAD_CLAIMS" then
-      valorantSetup
       return getMatchStats(pMatchID, pAttempt + 1)
     end if
     return tResult
@@ -870,7 +916,6 @@ function getPreGameStats pMatchID, pAttempt
 
   if tResult is not false and tResult["errorCode"] is not "RESOURCE_NOT_FOUND" then
     if tResult["errorCode"] is "BAD_CLAIMS" then
-      valorantSetup
       return getPreGameStats(pMatchID, pAttempt + 1)
     end if
     return tResult

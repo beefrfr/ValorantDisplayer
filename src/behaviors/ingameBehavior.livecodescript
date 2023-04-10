@@ -351,7 +351,7 @@ on getTeamData pTeam, pTeamName, @xData, @xPartyCount, @xParties
       
       /* RR */
       if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID then
-        if tTeammate["stats"]["rr"] is "N/A" or tTeammate["stats"]["rank"] is "Unranked" then
+        if tTeammate["stats"]["rr"] is empty or tTeammate["stats"]["rank"] is "Unranked" then
           put empty into tPlayerData["rr"]
         else
           put tTeammate["stats"]["rr"] & "rr" into tPlayerData["rr"]
@@ -392,6 +392,11 @@ on mainLoop
 
   put kCurrentCard into tGameState
   repeat while tGameState is "INGAME"
+    if checkSetup() is false then
+      goToPreLoad
+      exit mainLoop
+    end if
+
     put getPresences() into tPresences
     put getPrivatePresence(tPresences) into tPrivatePresence
     put tPrivatePresence["sessionLoopState"] into tGameState
@@ -422,8 +427,6 @@ on mainLoop
     if not isRunning() then
       exit mainLoop
     end if
-
-    valorantSetup
 
     /* Update UI */
     layoutControls

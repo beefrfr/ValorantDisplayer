@@ -22,7 +22,6 @@ constant kDividerBuffer = 10
 on menuSetup
   clearControls
   createControls
-  valorantSetup
   if sSetup then
     mainLoop
   else
@@ -251,6 +250,11 @@ on mainLoop
   local tPresences, tPrivatePresence, tGameState
   put "MENUS" into tGameState
   repeat while tGameState is "MENUS" and isRunning()
+    if checkSetup() is false then
+      goToPreLoad
+      exit mainLoop
+    end if
+
     put getPresences() into tPresences
     put getPrivatePresence(tPresences) into tPrivatePresence
     put tPrivatePresence["sessionLoopState"] into tGameState

@@ -111,7 +111,7 @@ end layoutControls
 
 on setStatus pStatus, pProgress
 	if the cProgressBarCount of graphic "progressBarProgress" < pProgress then
-		set the text of field "statusField" to pStatus
+		//set the text of field "statusField" to pStatus
 		local tStep
 		put (pProgress - the cProgressBarCount of graphic "progressBarProgress") / 10 into tStep
 		repeat for 10 times
@@ -194,6 +194,7 @@ on main
 	  	next repeat
 	  end if
 	  add 1 to tStepForProfile
+	  wait 250 milliseconds with messages
 
 	  setStatus "Getting Header data", tStepForProfile
 	  repeat while getHeaders() is false and tErrorCount < 25
@@ -204,6 +205,7 @@ on main
 	  	next repeat
 	  end if
 	  add 1 to tStepForProfile
+	  wait 250 milliseconds with messages
 
 	  setStatus "Getting current Valorant version", tStepForProfile
 	  repeat while getCurrentVersion() is false and tErrorCount < 25
@@ -214,6 +216,7 @@ on main
 	  	next repeat
 	  end if
 	  add 1 to tStepForProfile
+	  wait 250 milliseconds with messages
 
 	  setStatus "Getting account region", tStepForProfile
 	  repeat while getRegion() is false and tErrorCount < 25
@@ -224,6 +227,7 @@ on main
 	  	next repeat
 	  end if
 	  add 1 to tStepForProfile
+	  wait 250 milliseconds with messages
 
 	  setStatus "Getting season data", tStepForProfile
 	  repeat while getSeasons() is false and tErrorCount < 25
@@ -234,6 +238,11 @@ on main
 	  	next repeat
 	  end if
 	  add 1 to tStepForProfile
+	  wait 250 milliseconds with messages
+
+		if checkSetup() is false then
+			next repeat
+		end if
 
 	  set the text of field "loadingField" to "Waiting"
 	  setStatus "Looking for Valorant Process", tStepForProfile
@@ -244,7 +253,7 @@ on main
     if tGameState is empty then
     	next repeat
     end if
-    
+
 	  put true into sSetup
 	  redirect
 	end repeat
