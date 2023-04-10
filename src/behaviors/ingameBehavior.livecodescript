@@ -253,6 +253,14 @@ function getPolylistDataLayout
   put "0px" into rDataLayout[10]["bottom"]
   put "255,255,255,200" into rDataLayout[10]["color"]
 
+  put "favouriteWeapon" into rDataLayout[11]["name"]
+  put round((tItemHeight * 0.7) + 10) & "px" into rDataLayout[11]["right"]
+  put itemHeightPercentToPixels(tItemHeight, 1.85) into rDataLayout[11]["left"]
+  put itemHeightPercentToPixels(tItemHeight, 0.4) into rDataLayout[11]["top"]
+  put "0px" into rDataLayout[11]["bottom"]
+  put "image-data" into rDataLayout[11]["content-type"]
+  put "scale-down" into rDataLayout[11]["content-fit"]
+
   return rDataLayout
 end getPolylistDataLayout
 
@@ -382,6 +390,14 @@ on getTeamData pTeam, pTeamName, @xData, @xPartyCount, @xParties
         put "e" & tTeammate["stats"]["peakEpisode"] & "a" & tTeammate["stats"]["peakAct"] into tPlayerData["peakAct"]
       else
         put empty into tPlayerData["peakAct"]
+      end if
+
+      /* Favourite Weapon */
+      local tFavouriteWeapon, tWeapon
+      put sSettings["favouriteWeapon"] into tFavouriteWeapon
+      if tFavouriteWeapon is among the keys of tTeammate["Loadout"] and the number of elements of tTeammate["Loadout"][tFavouriteWeapon] is not empty then
+        put tTeammate["Loadout"][tFavouriteWeapon] into tWeapon
+        put tWeapon["icon"] into tPlayerData["favouriteWeapon"]
       end if
 
       appendArray xData, tPlayerData
