@@ -9,13 +9,19 @@ global sHeaders, sPUUID
 global sCurrentVersion
 global sSetup
 global sWeapons, sWeaponList
-global sAgents
+global sAgents, sMaps, sRanks
 global sSettings
+global sSeasons
+global sActs
+global sFetchDataCache
+global sShouldCache
 
 local sTeams
 local sMatchID
 
 /* UI vars */
+
+constant kCurrentCard = "preGame"
 
 on preGameSetup
   clearControls
@@ -26,7 +32,7 @@ end preGameSetup
 on preGameSetupRecursive
   if sSetup then
     local tPresences, tPrivatePresence, tGameState
-    put "PREGAME" into tGameState
+    put kCurrentCard into tGameState
 
     put getPresences() into tPresences
     put getPrivatePresence(tPresences) into tPrivatePresence
@@ -34,7 +40,7 @@ on preGameSetupRecursive
 
     local tMatchStats
     put getPreGameID(0) into sMatchID
-    if sMatchID is false or tGameState is not "PREGAME" then
+    if sMatchID is false or tGameState is not kCurrentCard then
       redirect
       exit preGameSetupRecursive
     end if
@@ -50,8 +56,8 @@ on resizeStack
 end resizeStack
 
 on clearControls
-  repeat with x = (the number of controls of card "preGame") down to 1
-    if there is a control x of card "preGame" then delete control x of card "preGame"
+  repeat with x = (the number of controls of card kCurrentCard) down to 1
+    if there is a control x of card kCurrentCard then delete control x of card kCurrentCard
   end repeat
 end clearControls
 
@@ -61,7 +67,7 @@ on createControls
 
   set the backgroundcolor of me to "34, 42, 53"
 
-  create field "stateField" in card "preGame"
+  create field "stateField" in card kCurrentCard
   set the lockText of field "stateField" to true
   set the textAlign of field "stateField" to "center"
   set the textSize of field "stateField" to 14
@@ -71,10 +77,10 @@ on createControls
   set the borderWidth of field "stateField" to 0
   set the opaque of field "stateField" to false
 
-  create group "playersGroup" in card "preGame"
+  create group "playersGroup" in card kCurrentCard
   set the lockLoc of group "playersGroup" to true
 
-  create widget "playersPolylist" as "com.livecode.widget.polylist" in group "playersGroup" of card "preGame"
+  create widget "playersPolylist" as "com.livecode.widget.polylist" in group "playersGroup" of card kCurrentCard
   set the dataLayout of widget "playersPolylist" to getPolylistDataLayout()
   set the margin of widget "playersPolylist" to 1
   set the borderWidth of widget "playersPolylist" to 0
@@ -89,7 +95,7 @@ on createControls
   set the lineSize of the templategraphic to 0
   set the backgroundColor of the templategraphic to "#929292"
 
-  create invisible button "rightClickMenu" in card "preGame"
+  create invisible button "rightClickMenu" in card kCurrentCard
   set the menuMode of button "rightClickMenu" to "popup"
   set the style of button "rightClickMenu" to "menu"
 
@@ -405,10 +411,15 @@ function getPolylistData pTeams
   local tMyTeam
   put pTeams[pTeams["myTeam"]] into tMyTeam
 
-  local pTeamName, tParty
-  put "blue" into pTeamName
-  repeat for each key tPartyID in tMyTeam
-    put tMyTeam[tPartyID] into tParty
+  getTeamData tMyTeam, "blue", tData, tPartyCount, tParties
+  
+  return tData
+end getPolylistData
+
+on getTeamData pTeam, pTeamName, @xData, @xPartyCount, @xParties
+  local tParty
+  repeat for each key tPartyID in pTeam
+    put pTeam[tPartyID] into tParty
     repeat for each element tTeammate in tParty
       local tPlayerData
       put empty into tPlayerData
@@ -422,12 +433,12 @@ function getPolylistData pTeams
       if the number of elements of tParty is 1 or sSettings["showParties"] is false then
         put "assets/agentborders/parties/noparty_" & pTeamName & ".png" into tPlayerData["party"]
       else
-        if tPartyID is among the keys of tParties then
-          put "assets/agentborders/parties/party" & tParties[tPartyID] & ".png" into tPlayerData["party"]
+        if tPartyID is among the keys of xParties then
+          put "assets/agentborders/parties/party" & xParties[tPartyID] & ".png" into tPlayerData["party"]
         else
-          put "assets/agentborders/parties/party" & tPartyCount & ".png" into tPlayerData["party"]
-          put tPartyCount into tParties[tPartyID]
-          add 1 to tPartyCount
+          put "assets/agentborders/parties/party" & xPartyCount & ".png" into tPlayerData["party"]
+          put xPartyCount into xParties[tPartyID]
+          add 1 to xPartyCount
         end if
       end if
       
@@ -469,7 +480,7 @@ function getPolylistData pTeams
       /* Peak Text */
       if tTeammate["stats"]["peakEpisode"] is empty or tTeammate["stats"]["peakAct"] is empty then
         put empty into tPlayerData["peakText"]
-        appendArray tData, tPlayerData
+        appendArray xData, tPlayerData
         next repeat
       end if
       put "Peak" into tPlayerData["peakText"]
@@ -488,18 +499,16 @@ function getPolylistData pTeams
         put empty into tPlayerData["peakAct"]
       end if
 
-      appendArray tData, tPlayerData
+      appendArray xData, tPlayerData
     end repeat
   end repeat
-  
-  return tData
-end getPolylistData
+end getTeamData
 
 on mainLoop
   local tPresences, tPrivatePresence, tGameState
 
-  put "PREGAME" into tGameState
-  repeat while tGameState is "PREGAME"
+  put kCurrentCard into tGameState
+  repeat while tGameState is kCurrentCard
     put getPresences() into tPresences
     put getPrivatePresence(tPresences) into tPrivatePresence
     put tPrivatePresence["sessionLoopState"] into tGameState
@@ -517,7 +526,7 @@ on mainLoop
     set the text of field "stateField" to capitalizeWords(tGamemode) & space & slash & slash & space & capitalizeWords(sTeams["map"])
 
     setupPolylist
-    if tGameState is "PREGAME" then
+    if tGameState is kCurrentCard then
       if tDidFail then
         send "preGameSetupRecursive" to me in 50 milliseconds
         exit mainLoop
