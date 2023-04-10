@@ -22,6 +22,7 @@ local sMatchID
 /* UI vars */
 
 constant kCurrentCard = "inGame"
+constant kGameState = "INGAME"
 
 on inGameSetup
   clearControls
@@ -32,7 +33,7 @@ end inGameSetup
 on inGameSetupRecursive
   if sSetup then
     local tPresences, tPrivatePresence, tGameState
-    put kCurrentCard into tGameState
+    put kGameState into tGameState
 
     put getPresences() into tPresences
     put getPrivatePresence(tPresences) into tPrivatePresence
@@ -40,7 +41,7 @@ on inGameSetupRecursive
 
     local tMatchStats
     put getMatchID(0) into sMatchID
-    if sMatchID is false or tGameState is not "INGAME" then
+    if sMatchID is false or tGameState is not kGameState then
       redirect
       exit inGameSetupRecursive
     end if
@@ -89,6 +90,7 @@ on createControls
   set the blendLevel of widget "playersPolylist" to 8
   set the plitemcolor of widget "playersPolylist" to "0,0,0,0"
   set the enableImageCache of widget "playersPolylist" to false
+  set the dataContent of widget "playersPolylist" to empty
 
   set the width of the templategraphic to 4
   set the opaque of the templategraphic to true
@@ -390,8 +392,8 @@ end getTeamData
 on mainLoop
   local tPresences, tPrivatePresence, tGameState
 
-  put kCurrentCard into tGameState
-  repeat while tGameState is "INGAME"
+  put kGameState into tGameState
+  repeat while tGameState is kGameState
     if checkSetup() is false then
       goToPreLoad
       exit mainLoop
@@ -414,7 +416,7 @@ on mainLoop
     set the text of field "stateField" to capitalizeWords(tGamemode) & space & slash & slash & space & capitalizeWords(sTeams["map"])
 
     setupPolylist
-    if tGameState is "INGAME" then
+    if tGameState is kGameState then
       if tDidFail then
         send "inGameSetupRecursive" to me in 50 milliseconds
         exit mainLoop

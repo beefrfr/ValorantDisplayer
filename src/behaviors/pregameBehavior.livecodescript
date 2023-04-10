@@ -22,6 +22,7 @@ local sMatchID
 /* UI vars */
 
 constant kCurrentCard = "preGame"
+constant kGameState = "PREGAME"
 
 on preGameSetup
   clearControls
@@ -40,7 +41,7 @@ on preGameSetupRecursive
 
     local tMatchStats
     put getPreGameID(0) into sMatchID
-    if sMatchID is false or tGameState is not kCurrentCard then
+    if sMatchID is false or tGameState is not kGameState then
       redirect
       exit preGameSetupRecursive
     end if
@@ -89,6 +90,7 @@ on createControls
   set the blendLevel of widget "playersPolylist" to 8
   set the plitemcolor of widget "playersPolylist" to "0,0,0,0"
   set the enableImageCache of widget "playersPolylist" to false
+  set the dataContent of widget "playersPolylist" to empty
 
   set the width of the templategraphic to 4
   set the opaque of the templategraphic to true
@@ -388,9 +390,9 @@ end getTeamData
 on mainLoop
   local tPresences, tPrivatePresence, tGameState
 
-  put kCurrentCard into tGameState
-  repeat while tGameState is kCurrentCard
-    if checkSetup() is false then
+  put kGameState into tGameState
+  repeat while tGameState is kGameState
+    if checkSetup is false then
       goToPreLoad
       exit mainLoop
     end if
@@ -412,7 +414,7 @@ on mainLoop
     set the text of field "stateField" to capitalizeWords(tGamemode) & space & slash & slash & space & capitalizeWords(sTeams["map"])
 
     setupPolylist
-    if tGameState is kCurrentCard then
+    if tGameState is kGameState then
       if tDidFail then
         send "preGameSetupRecursive" to me in 50 milliseconds
         exit mainLoop
