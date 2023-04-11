@@ -472,7 +472,7 @@ function getRanks
         next repeat
       end if
 
-      put fetchData("custom",tIconPath,"GET", false, false) into tIconData
+      put fetchData("custom",tIconPath,"GET", false, true) into tIconData
       if tIconData is false then
         put tIconData into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
         next repeat
@@ -527,7 +527,7 @@ function getWeapons
         next repeat
       end if
 
-      put fetchData("custom",tIconPath,"GET", false, false) into tIconData
+      put fetchData("custom",tIconPath,"GET", false, true) into tIconData
       if tIconData is false then
         put tIconData into sWeapons[tSkinUUID]["icon"]
         next repeat
@@ -584,7 +584,7 @@ function getAgents
       next repeat
     end if
 
-    put fetchData("custom",tIconPath,"GET", false, false) into tIconData
+    put fetchData("custom",tIconPath,"GET", false, true) into tIconData
     if tIconData is false then
       put tIconData into sAgents[tAgent["uuid"]]["icon"]
       next repeat
@@ -688,7 +688,7 @@ function fetchData pUrlType, pUrl, pMethod, pDecode, pIgnoreCharacterConversion
   end repeat
 
   local tRawResult, tDecodedResult
-  if pIgnoreCharacterConversion then
+  if pIgnoreCharacterConversion is true then
     put sTsNetResults[tConnectionID] into tDecodedResult
   else
     put sTsNetResults[tConnectionID] into tRawResult
