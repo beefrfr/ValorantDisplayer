@@ -24,6 +24,7 @@ constant kDivisionList = "Unranked,Iron,Bronze,Silver,Gold,Plat,Diamond,Ascendan
 constant kCacheTimeoutMilliseconds = 10000
 
 global sRunning
+global sSubItemClick
 local sTsNetResults
 
 on useCache
@@ -744,7 +745,8 @@ function getPartyMemberData pPresences, @xDidFail
 
   repeat for each element tPartyMember in tParty
     put tPartyMember["level"] into tPartyInfo[tPartyMember["uuid"]]["level"]
-    put tNames[tPartyMember["uuid"]] into tPartyInfo[tPartyMember["uuid"]]["name"]
+    put tNames[tPartyMember["uuid"]]["name"] into tPartyInfo[tPartyMember["uuid"]]["name"]
+    put tNames[tPartyMember["uuid"]]["tag"] into tPartyInfo[tPartyMember["uuid"]]["tag"]
   end repeat
   return tPartyInfo
 end getPartyMemberData
@@ -857,7 +859,8 @@ function getNames pUUIDs
   local rNames
   /* Handle response */
   repeat for each element tUser in tResult
-    put tUser["GameName"] & "#" & tUser["TagLine"] into rNames[tUser["Subject"]]
+    put tUser["GameName"] into rNames[tUser["Subject"]]["name"]
+    put tUser["TagLine"] into rNames[tUser["Subject"]]["tag"]
   end repeat
   return rNames
 end getNames
@@ -1029,14 +1032,16 @@ function getInGameTeams pMatchID, pPresences, @xDidFail
     repeat for each key tPartyID in tTeams["blue"]
       repeat for each key tUUID in tTeams["blue"][tPartyID]
         if tUUID is among the keys of tNames then
-          put tNames[tUUID] into tTeams["blue"][tPartyID][tUUID]["Name"]
+          put tNames[tUUID]["name"] into tTeams["blue"][tPartyID][tUUID]["Name"]
+          put tNames[tUUID]["tag"] into tTeams["blue"][tPartyID][tUUID]["tag"]
         end if
       end repeat
     end repeat
     repeat for each key tPartyID in tTeams["red"]
       repeat for each key tUUID in tTeams["red"][tPartyID]
         if tUUID is among the keys of tNames then
-          put tNames[tUUID] into tTeams["red"][tPartyID][tUUID]["Name"]
+          put tNames[tUUID]["name"] into tTeams["red"][tPartyID][tUUID]["Name"]
+          put tNames[tUUID]["tag"] into tTeams["red"][tPartyID][tUUID]["tag"]
         end if
       end repeat
     end repeat
@@ -1093,7 +1098,8 @@ function getPreGameTeam pMatchID, pPresences, @xDidFail
     repeat for each key tPartyID in tTeams[tTeams["myTeam"]]
       repeat for each key tUUID in tTeams[tTeams["myTeam"]][tPartyID]
         if tUUID is among the keys of tNames then
-          put tNames[tUUID] into tTeams[tTeams["myTeam"]][tPartyID][tUUID]["Name"]
+          put tNames[tUUID]["name"] into tTeams[tTeams["myTeam"]][tPartyID][tUUID]["Name"]
+          put tNames[tUUID]["tag"] into tTeams[tTeams["myTeam"]][tPartyID][tUUID]["tag"]
         end if
       end repeat
     end repeat
@@ -1312,3 +1318,26 @@ on subItemMouseLeave
   put the long id of the target into tPolylist
   set the tooltip of tPolylist to empty
 end subItemMouseLeave
+
+on subItemClick pItemIndex, pItemName
+  if pItemIndex is not among the keys of sSubItemClick then
+    put milliseconds() into sSubItemClick[pItemIndex]
+    exit subItemClick
+  end if
+  if (milliseconds() - sSubItemClick[pItemIndex]) > 500 then
+    delete variable sSubItemClick[pItemIndex]
+    exit subItemClick
+  end if
+  delete variable sSubItemClick[pItemIndex]
+
+  local tPolylist, tPolylistRowData
+  put the long id of the target into tPolylist
+  set the itemPointer of tPolylist to pItemIndex
+  put the itemContent of tPolylist into tPolylistRowData
+  if tPolylistRowData["username"] is not empty then
+    local tUrl
+
+    put "https://tracker.gg/valorant/profile/riot/" & urlEncode(textEncode(tPolylistRowData["name"] & "#" & tPolylistRowData["tag"],"utf8")) into tUrl
+    launch url tUrl
+  end if
+end subItemClick

@@ -362,7 +362,9 @@ on getTeamData pTeam, pTeamName, @xData, @xPartyCount, @xParties
       
       /* Name */
       if sSettings["alwaysShowName"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID then
-        put tTeammate["name"] into tPlayerData["username"]
+        put tTeammate["name"] & "#" & tTeammate["tag"] into tPlayerData["username"]
+        put tTeammate["name"] into tPlayerData["name"]
+        put tTeammate["tag"] into tPlayerData["tag"]
       else
         put "--" into tPlayerData["username"]
       end if

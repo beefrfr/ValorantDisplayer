@@ -274,7 +274,9 @@ function getPolylistData pParty
     end if
     
     /* Name */
-    put tTeammate["name"] into tPlayerData["username"]
+    put tTeammate["name"] & "#" & tTeammate["tag"] into tPlayerData["username"]
+    put tTeammate["name"] into tPlayerData["name"]
+    put tTeammate["tag"] into tPlayerData["tag"]
     
     /* Rank Icon */
     put tTeammate["rankIcon"] into tPlayerData["rank"]
