@@ -275,6 +275,7 @@ function getPolylistData pParty
     
     /* Name */
     put tTeammate["name"] & "#" & tTeammate["tag"] into tPlayerData["username"]
+    put tTeammate["name"] & "#" & tTeammate["tag"] into tPlayerData["username_hovertext"]
     put tTeammate["name"] into tPlayerData["name"]
     put tTeammate["tag"] into tPlayerData["tag"]
     
