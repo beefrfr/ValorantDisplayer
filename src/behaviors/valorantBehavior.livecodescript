@@ -472,7 +472,7 @@ function getRanks
         next repeat
       end if
 
-      put fetchData("custom",tIconPath,"GET", false) into tIconData
+      put fetchData("custom",tIconPath,"GET", false, false) into tIconData
       if tIconData is false then
         put tIconData into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
         next repeat
@@ -527,7 +527,7 @@ function getWeapons
         next repeat
       end if
 
-      put fetchData("custom",tIconPath,"GET", false) into tIconData
+      put fetchData("custom",tIconPath,"GET", false, false) into tIconData
       if tIconData is false then
         put tIconData into sWeapons[tSkinUUID]["icon"]
         next repeat
@@ -584,7 +584,7 @@ function getAgents
       next repeat
     end if
 
-    put fetchData("custom",tIconPath,"GET", false) into tIconData
+    put fetchData("custom",tIconPath,"GET", false, false) into tIconData
     if tIconData is false then
       put tIconData into sAgents[tAgent["uuid"]]["icon"]
       next repeat
@@ -610,7 +610,7 @@ function getMaps
   return true
 end getMaps
 
-function fetchData pUrlType, pUrl, pMethod, pDecode
+function fetchData pUrlType, pUrl, pMethod, pDecode, pIgnoreCharacterConversion
   if pMethod is empty then put "GET" into pMethod
 
   local tHeaders
@@ -688,8 +688,12 @@ function fetchData pUrlType, pUrl, pMethod, pDecode
   end repeat
 
   local tRawResult, tDecodedResult
-  put sTsNetResults[tConnectionID] into tRawResult
-  put textDecode(textencode(tRawResult, "native"), "utf-8") into tDecodedResult
+  if pIgnoreCharacterConversion then
+    put sTsNetResults[tConnectionID] into tDecodedResult
+  else
+    put sTsNetResults[tConnectionID] into tRawResult
+    put textDecode(textencode(tRawResult, "native"), "utf-8") into tDecodedResult
+  end if
 
   if pDecode is false then
     delete variable sTsNetResults[tConnectionID]
