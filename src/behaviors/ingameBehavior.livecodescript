@@ -66,7 +66,7 @@ on createControls
   /* Clean up stack */
   clearControls
 
-  set the backgroundcolor of me to "34, 42, 53"
+  set the backgroundcolor of me to getBackgroundColor()
 
   create field "stateField" in card kCurrentCard
   set the lockText of field "stateField" to true
@@ -424,6 +424,7 @@ on mainLoop
 
     set the text of field "stateField" to capitalizeWords(tGamemode) & space & slash & slash & space & capitalizeWords(sTeams["map"])
 
+    lock screen for visual effect
     setupPolylist
     if tGameState is kGameState then
       if tDidFail then
@@ -441,6 +442,7 @@ on mainLoop
 
     /* Update UI */
     layoutControls
+    unlock screen with visual effect "dissolve" very fast
 
     if not waitForSeconds(20, tGameState) then
       exit mainLoop

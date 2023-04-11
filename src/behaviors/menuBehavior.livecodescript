@@ -43,7 +43,7 @@ on createControls
   /* Clean up stack */
   clearControls
 
-  set the backgroundcolor of me to "34, 42, 53"
+  set the backgroundcolor of me to getBackgroundColor()
 
   create field "stateField" in card kCurrentCard
   set the lockText of field "stateField" to true
@@ -330,6 +330,7 @@ on mainLoop
 
     set the text of field "stateField" to "Menu" & space & slash & slash & space & capitalizeWords(tGamemode)
 
+    lock screen for visual effect
     setupPolylist
 
     if not isRunning() then
@@ -338,6 +339,8 @@ on mainLoop
 
     /* Update UI */
     layoutControls
+
+    unlock screen with visual effect "dissolve" very fast
 
     if not waitForSeconds(2, tGameState) then
       exit mainLoop

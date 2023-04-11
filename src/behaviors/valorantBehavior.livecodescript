@@ -22,6 +22,7 @@ global sForceUpdate
 
 constant kDivisionList = "Unranked,Iron,Bronze,Silver,Gold,Plat,Diamond,Ascendant,Immortal,Radiant"
 constant kCacheTimeoutMilliseconds = 10000
+constant kBackgroundColor = "34, 42, 53"
 
 global sRunning
 global sSubItemClick
@@ -51,8 +52,27 @@ on openStack
   put empty into sFetchDataCache
   put false into sForceUpdate
   useCache
+
+  lock screen
+  set the backgroundcolor of this stack to kBackgroundColor
+  repeat with x = (the number of cards of this stack) down to 1
+    try
+      if there is a card x of this stack then
+        send "clearControls" to card x of this stack
+        set the backgroundcolor of card x of this stack to kBackgroundColor
+      end if
+    catch tErr
+      next repeat
+    end try
+  end repeat
+  unlock screen
+
   send "goToPreLoad" to me in 5 milliseconds
 end openStack
+
+function getBackgroundColor
+  return kBackgroundColor
+end getBackgroundColor
 
 function getSettings
   /* Load Settings */
@@ -125,6 +145,7 @@ end gotoPreLoad
 
 on redirect
   if isRunning() then
+    lock screen for visual effect
     repeat while true
       local tPresences, tPrivatePresence, tGameState
       put getPresences() into tPresences
@@ -144,7 +165,6 @@ on redirect
         goToPreLoad
         exit redirect
       end if
-
       switch tGameState
         case "MENUS"
           goToMenu

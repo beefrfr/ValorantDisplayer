@@ -66,7 +66,7 @@ on createControls
   /* Clean up stack */
   clearControls
 
-  set the backgroundcolor of me to "34, 42, 53"
+  set the backgroundcolor of me to getBackgroundColor()
 
   create field "stateField" in card kCurrentCard
   set the lockText of field "stateField" to true
@@ -329,9 +329,9 @@ on getTeamData pTeam, pTeamName, @xData, @xPartyCount, @xParties
       put tTeammate["agent"] into tPlayerData["agent_hovertext"]
 
       /* Agent Shading */
-      put "34,42,53,0" into tPlayerData["agentSelected"]
+      put getBackgroundColor() & ", 0" into tPlayerData["agentSelected"]
       if tTeammate["agentSelected"] is false then
-        put "34,42,53,120" into tPlayerData["agentSelected"]
+        put getBackgroundColor() & ", 120" into tPlayerData["agentSelected"]
       end if
       put tTeammate["agent"] into tPlayerData["agentSelected_hovertext"]
       
@@ -438,6 +438,7 @@ on mainLoop
 
     set the text of field "stateField" to capitalizeWords(tGamemode) & space & slash & slash & space & capitalizeWords(sTeams["map"])
 
+    lock screen for visual effect
     setupPolylist
     if tGameState is kGameState then
       if tDidFail then
@@ -455,6 +456,7 @@ on mainLoop
 
     /* Update UI */
     layoutControls
+    unlock screen with visual effect "dissolve" very fast
 
     if not waitForSeconds(2, tGameState) then
       exit mainLoop

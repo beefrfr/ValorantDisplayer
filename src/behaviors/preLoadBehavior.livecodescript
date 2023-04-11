@@ -17,8 +17,7 @@ global sFetchDataCache
 global sShouldCache
 
 on openCard
-	set the text of field "statusField" to ""
-	resizeStack
+	layoutControls
 end openCard
 
 on resizeStack
@@ -34,7 +33,7 @@ end clearControls
 on createControls
 	clearControls
 
-	set the backgroundcolor of me to "34, 42, 53"
+	set the backgroundcolor of me to getBackgroundColor()
 
   create field "statusField" in card "preLoad"
   set the lockText of field "statusField" to true
@@ -130,13 +129,17 @@ on main
 	wait 10 milliseconds with messages
   set the text of field "loadingField" to "Loading"
 
+  unlock screen with visual effect "dissolve" very fast
+
   local tGeneralSetup
   put false into tGeneralSetup
   /* General Loading */
   local tStep, tErrorCount
   repeat while tGeneralSetup is false
   	put 0 into tErrorCount
+  	unlock screen
 		setStatus "Loading settings", tStep
+		lock screen
 	  repeat while getSettings() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -146,7 +149,9 @@ on main
 	  end if
 	  add 1 to tStep
 
+	  unlock screen
 		setStatus "Getting rank data", tStep
+		lock screen
 	  repeat while getRanks() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -156,7 +161,9 @@ on main
 	  end if
 	  add 1 to tStep
 
+	  unlock screen
 	  setStatus "Getting weapon data", tStep
+	  lock screen
 	  repeat while getWeapons() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -166,7 +173,9 @@ on main
 	  end if
 	  add 1 to tStep
 
+	  unlock screen
 	  setStatus "Getting agent data", tStep
+	  lock screen
 	  repeat while getAgents() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -176,7 +185,9 @@ on main
 	  end if
 	  add 1 to tStep
 
+	  unlock screen
 	  setStatus "Getting map data", tStep
+	  lock screen
 	  repeat while getMaps() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -195,7 +206,9 @@ on main
 		put tStep into tStepForProfile
 
 	  /* Profile Specific */
+	  unlock screen
 		setStatus "Looking for Riot Client", tStepForProfile
+		lock screen
 	  repeat while getLockFile() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -206,7 +219,9 @@ on main
 	  add 1 to tStepForProfile
 	  wait 250 milliseconds with messages
 
+	  unlock screen
 	  setStatus "Getting Header data", tStepForProfile
+	  lock screen
 	  repeat while getHeaders() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -217,7 +232,9 @@ on main
 	  add 1 to tStepForProfile
 	  wait 250 milliseconds with messages
 
+	  unlock screen
 	  setStatus "Getting current Valorant version", tStepForProfile
+	  lock screen
 	  repeat while getCurrentVersion() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -228,7 +245,9 @@ on main
 	  add 1 to tStepForProfile
 	  wait 250 milliseconds with messages
 
+	  unlock screen
 	  setStatus "Getting account region", tStepForProfile
+	  lock screen
 	  repeat while getRegion() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -239,7 +258,9 @@ on main
 	  add 1 to tStepForProfile
 	  wait 250 milliseconds with messages
 
+	  unlock screen
 	  setStatus "Getting season data", tStepForProfile
+	  lock screen
 	  repeat while getSeasons() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -254,6 +275,7 @@ on main
 			next repeat
 		end if
 
+		unlock screen
 	  set the text of field "loadingField" to "Waiting"
 	  setStatus "Looking for Valorant Process", tStepForProfile
 	  local tPresences, tPrivatePresence, tGameState
