@@ -34,7 +34,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "C:\Users\ben\Desktop\ValorantDisplayer\App\Dist\Files\{#AppVersion}\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\ben\Desktop\ValorantDisplayer\App\Dist\Files\{#AppVersion}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\ben\Desktop\ValorantDisplayer\App\Dist\Files\{#AppVersion}\*"; Excludes: "Downloaded"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
