@@ -40,7 +40,8 @@ There are two ways to download, installer or manual.
  - [ ] Show players with riot gun buddy
 
 ## Save as Standalone Instructions
-1. Open Project Browser
+1. Delete `assets/downloaded/` folder
+2. Open Project Browser
 3. Delete all substacks of `displayerStack`
 4. For each stack other than `displayerStack` open Property Inspector and set the "Main Stack" to `displayerStack`
 5. Supress messages
