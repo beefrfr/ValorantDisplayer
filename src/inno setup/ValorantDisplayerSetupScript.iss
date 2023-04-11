@@ -1,5 +1,5 @@
 ; AppVersion defines the folder in Dist to compile from
-#define AppVersion "Beta 2.1"
+#define AppVersion "Beta 2.2"
 
 #define AppName "Valorant Displayer"
 #define AppDev "beefrfr"
