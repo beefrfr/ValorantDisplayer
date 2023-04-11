@@ -88,6 +88,7 @@ end getBackgroundColor
 
 function getSettings
   /* Load Settings */
+  sendUpdate "Loading Settings"
   local tValorantDisplayerFolder
   put specialfolderpath("resources") into tValorantDisplayerFolder
   if there is not a folder tValorantDisplayerFolder then
@@ -231,6 +232,7 @@ end goToPreGame
 
 /* Valorant Information */
 function checkSetup
+  sendUpdate "Checking setup"
   if sPdUrl is empty then
     return false
   end if
@@ -298,6 +300,7 @@ function checkSetup
 end checkSetup
 
 function getRegion
+  sendUpdate "Getting player region"
   local tPath
   put specialfolderpath("Support") into tPath
   set the itemdelimiter to slash
@@ -333,6 +336,7 @@ function getRegion
 end getRegion
 
 function getLockFile
+  sendUpdate "Getting lock file"
   put empty into sLockName
   put empty into sLockPID
   put empty into sLockPort
@@ -355,6 +359,7 @@ function getLockFile
 end getLockFile
 
 function getHeaders
+  sendUpdate "Getting headers"
   put empty into sHeaders
 
   local tEntitlements
@@ -379,6 +384,7 @@ function getHeaders
 end getHeaders
 
 function getCurrentVersion
+  sendUpdate "Getting current version"
   local tPath
   put specialfolderpath("Support") into tPath
   set the itemdelimiter to slash
@@ -399,6 +405,7 @@ function getCurrentVersion
 end getCurrentVersion 
 
 function getSeasons
+  sendUpdate "Getting seasons"
   local tContent
   put empty into sCurrentSeason
   put empty into sSeasons
@@ -419,6 +426,7 @@ function getSeasons
     if tSeason["type"] is "ACT" then
       put tEpisodeCount into sSeasons[tSeason["id"]]["episode"]
       put tActCount into sSeasons[tSeason["id"]]["act"]
+      sendUpdate "Getting seasons" & return & "episode" && tEpisodeCount && "act" && tActCount
       add 1 to tActCount
       put tSeason["id"] & comma after tActIDs
     else if tSeason["type"] is "EPISODE" then
@@ -438,6 +446,7 @@ function getSeasons
 end getSeasons
 
 function getRanks
+  sendUpdate "Getting ranks"
   if sRanks is not empty then
     return true
   end if
@@ -467,6 +476,9 @@ function getRanks
       put tRank["largeIcon"] into tIconPath
       put binarydecode("H*",md5digest(tRank["tierName"]), tHashName) into tHashResult
       put tRanksFolder & "/rank_" & tHashName  & ".data" into tIconLocalPath
+
+      sendUpdate "Getting ranks" & return & tRank["tierName"]
+
       if there is a file tIconLocalPath then
         put base64Decode(URL("file:" & tIconLocalPath)) into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
         next repeat
@@ -486,6 +498,7 @@ function getRanks
 end getRanks
 
 function getWeapons
+  sendUpdate "Getting weapons"
   if sWeapons is not empty then
     return true
   end if
@@ -522,6 +535,9 @@ function getWeapons
 
       put binarydecode("H*",md5digest(tWeapon["DisplayName"] & "_" & tSkin["DisplayName"]), tHashName) into tHashResult
       put tWeaponsFolder & "/weapon_" & tHashName & ".data" into tIconLocalPath
+
+      sendUpdate "Getting weapons" & return & tWeapon["DisplayName"] & "_" & tSkin["DisplayName"]
+
       if there is a file tIconLocalPath then
         put base64Decode(URL("file:" & tIconLocalPath)) into sWeapons[tSkinUUID]["icon"]
         next repeat
@@ -553,6 +569,7 @@ function getWeaponList
 end getWeaponList
 
 function getAgents
+  sendUpdate "Getting agents"
   if sAgents is not empty then
     return true
   end if
@@ -579,6 +596,9 @@ function getAgents
     put tAgent["displayIconSmall"] into tIconPath
     put binarydecode("H*",md5digest(tAgent["displayName"]), tHashName) into tHashResult
     put tAgentsFolder & "/agent_" & tHashName & ".data" into tIconLocalPath
+
+    sendUpdate "Getting agents" & return & tAgent["displayName"]
+
     if there is a file tIconLocalPath then
       put base64Decode(URL("file:" & tIconLocalPath)) into sAgents[tAgent["uuid"]]["icon"]
       next repeat
@@ -596,6 +616,7 @@ function getAgents
 end getAgents
 
 function getMaps
+  sendUpdate "Getting maps"
   if sMaps is not empty then
     return true
   end if
@@ -605,6 +626,7 @@ function getMaps
     return false
   end if
   repeat for each element tMap in tRawMaps["data"]
+    sendUpdate "Getting maps" & return & tMap["displayName"]
     put tMap["displayName"] into sMaps[tMap["mapUrl"]]
   end repeat
   return true
@@ -726,6 +748,7 @@ on tsNetCallback pID, pResult, pBytes, pCurlCode
 end tsNetCallback
 
 function getPresences
+  sendUpdate "Getting local presences"
   local tPresences
   ignoreCache
   put fetchData("local", "chat/v4/presences", "GET") into tPresences
@@ -734,6 +757,7 @@ function getPresences
 end getPresences
 
 function getPrivatePresence pPresences, pUUID
+  sendUpdate "Getting private presence"
   if pUUID is empty then put sPUUID into pUUID
   repeat for each element tPresence in pPresences
     if tPresence["puuid"] is pUUID then
@@ -1436,3 +1460,11 @@ end getMinRowHeight
 function getMaxRowHeight
   return kMaxRowHeight
 end getMaxRowHeight
+
+on sendUpdate pMessage
+  try
+    dispatch "update" to this card with pMessage
+  catch tErr
+    exit sendUpdate
+  end try
+end sendUpdate

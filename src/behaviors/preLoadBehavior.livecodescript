@@ -110,7 +110,6 @@ end layoutControls
 
 on setStatus pStatus, pProgress
 	if the cProgressBarCount of graphic "progressBarProgress" < pProgress then
-		//set the text of field "statusField" to pStatus
 		local tStep
 		put (pProgress - the cProgressBarCount of graphic "progressBarProgress") / 10 into tStep
 		repeat for 10 times
@@ -122,6 +121,10 @@ on setStatus pStatus, pProgress
 		wait 50 milliseconds with messages
 	end if
 end setStatus
+
+on update pMessage
+	set the text of field "statusField" to pMessage
+end update
 
 on main
 	createControls
@@ -137,9 +140,7 @@ on main
   local tStep, tErrorCount
   repeat while tGeneralSetup is false
   	put 0 into tErrorCount
-  	unlock screen
 		setStatus "Loading settings", tStep
-		lock screen
 	  repeat while getSettings() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -149,9 +150,7 @@ on main
 	  end if
 	  add 1 to tStep
 
-	  unlock screen
 		setStatus "Getting rank data", tStep
-		lock screen
 	  repeat while getRanks() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -161,9 +160,7 @@ on main
 	  end if
 	  add 1 to tStep
 
-	  unlock screen
 	  setStatus "Getting weapon data", tStep
-	  lock screen
 	  repeat while getWeapons() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -173,9 +170,7 @@ on main
 	  end if
 	  add 1 to tStep
 
-	  unlock screen
 	  setStatus "Getting agent data", tStep
-	  lock screen
 	  repeat while getAgents() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -185,9 +180,7 @@ on main
 	  end if
 	  add 1 to tStep
 
-	  unlock screen
 	  setStatus "Getting map data", tStep
-	  lock screen
 	  repeat while getMaps() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -206,9 +199,7 @@ on main
 		put tStep into tStepForProfile
 
 	  /* Profile Specific */
-	  unlock screen
 		setStatus "Looking for Riot Client", tStepForProfile
-		lock screen
 	  repeat while getLockFile() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -219,9 +210,7 @@ on main
 	  add 1 to tStepForProfile
 	  wait 250 milliseconds with messages
 
-	  unlock screen
 	  setStatus "Getting Header data", tStepForProfile
-	  lock screen
 	  repeat while getHeaders() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -232,9 +221,7 @@ on main
 	  add 1 to tStepForProfile
 	  wait 250 milliseconds with messages
 
-	  unlock screen
 	  setStatus "Getting current Valorant version", tStepForProfile
-	  lock screen
 	  repeat while getCurrentVersion() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -245,9 +232,7 @@ on main
 	  add 1 to tStepForProfile
 	  wait 250 milliseconds with messages
 
-	  unlock screen
 	  setStatus "Getting account region", tStepForProfile
-	  lock screen
 	  repeat while getRegion() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -258,9 +243,7 @@ on main
 	  add 1 to tStepForProfile
 	  wait 250 milliseconds with messages
 
-	  unlock screen
 	  setStatus "Getting season data", tStepForProfile
-	  lock screen
 	  repeat while getSeasons() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
@@ -275,7 +258,6 @@ on main
 			next repeat
 		end if
 
-		unlock screen
 	  set the text of field "loadingField" to "Waiting"
 	  setStatus "Looking for Valorant Process", tStepForProfile
 	  local tPresences, tPrivatePresence, tGameState
