@@ -97,7 +97,7 @@ end createControls
 
 on layoutControls
   try
-    set the minWidth of this stack to the number of items of sSettings["visibleSections"] * 100
+    set the minWidth of this stack to 500
     set the minHeight of this stack to 300
     if the width of this stack < the minWidth of this stack then
       set the width of this stack to the minWidth of this stack
@@ -124,7 +124,7 @@ on layoutControls
     local tItemHeight, tRows
     put max(1,the numberofelements of widget "playersPolylist") into tRows
     put ((the height of me - 35 - ((the margin of widget "playersPolylist" + the borderWidth of widget "playersPolylist") * tRows)) / (tRows)) into tItemHeight
-    put min(max(tItemHeight, 100), 200) into tItemHeight
+    put min(max(tItemHeight, getMinRowHeight()), getMaxRowHeight()) into tItemHeight
     set the itemHeight of widget "playersPolylist" to tItemHeight
 
     set the dataLayout of widget "playersPolylist" to getPolylistDataLayout()

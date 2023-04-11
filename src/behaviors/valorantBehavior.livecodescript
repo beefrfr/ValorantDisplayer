@@ -24,6 +24,8 @@ global sLastForceRefresh
 constant kDivisionList = "Unranked,Iron,Bronze,Silver,Gold,Plat,Diamond,Ascendant,Immortal,Radiant"
 constant kCacheTimeoutMilliseconds = 10000
 constant kBackgroundColor = "34, 42, 53"
+constant kMinRowHeight = 50
+constant kMaxRowHeight = 250
 
 global sRunning
 global sSubItemClick
@@ -1414,3 +1416,11 @@ on subItemClick pItemIndex, pItemName
     launch url tUrl
   end if
 end subItemClick
+
+function getMinRowHeight
+  return kMinRowHeight
+end getMinRowHeight
+
+function getMaxRowHeight
+  return kMaxRowHeight
+end getMaxRowHeight
