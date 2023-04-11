@@ -945,7 +945,7 @@ function agentIDtoName pAgentID
   if pAgentID is among the keys of sAgents then
     return sAgents[pAgentID]["name"]
   end if
-  return "Unknown"
+  return empty
 end agentIDtoName
 
 function agentIDtoIcon pAgentID
