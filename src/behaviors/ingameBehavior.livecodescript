@@ -162,7 +162,7 @@ function getPolylistDataLayout
   put "agent" into rDataLayout[1]["name"]
   put itemHeightPercentToPixels(tItemHeight, 0.6) into rDataLayout[1]["width"]
   put itemHeightPercentToPixels(tItemHeight, 0.6) into rDataLayout[1]["height"]
-  put "20px" into rDataLayout[1]["left"]
+  put (round(tItemHeight * 0.1) + 10) & "px" into rDataLayout[1]["left"]
   put itemHeightPercentToPixels(tItemHeight, 0.2) into rDataLayout[1]["top"]
   put "image-data" into rDataLayout[1]["content-type"]
   put "scale-down" into rDataLayout[1]["content-fit"]
@@ -321,6 +321,7 @@ on getTeamData pTeam, pTeamName, @xData, @xPartyCount, @xParties
       if tTeammate["agentIcon"] is not empty then
         put tTeammate["agentIcon"] into tPlayerData["agent"]
       end if
+      put tTeammate["agent"] into tPlayerData["agent_hovertext"]
       
       /* Party */
       if the number of elements of tParty is 1 or sSettings["showParties"] is false then
@@ -334,9 +335,11 @@ on getTeamData pTeam, pTeamName, @xData, @xPartyCount, @xParties
           add 1 to xPartyCount
         end if
       end if
+      put tTeammate["agent"] into tPlayerData["party_hovertext"]
       
       /* Team */
       put "assets/agentborders/teams/" & pTeamName & ".png" into tPlayerData["team"]
+      put tTeammate["agent"] into tPlayerData["team_hovertext"]
 
       /* Level */
       if sSettings["alwaysShowLevel"] or tTeammate["hiddenLevel"] is false or tTeammate["uuid"] is sPUUID then
@@ -355,6 +358,7 @@ on getTeamData pTeam, pTeamName, @xData, @xPartyCount, @xParties
       /* Rank Icon */
       if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID then
         put tTeammate["stats"]["rankIcon"] into tPlayerData["rank"]
+        put tTeammate["stats"]["rank"] into tPlayerData["rank_hovertext"]
       else
         put empty into tPlayerData["rank"]
       end if
@@ -381,6 +385,7 @@ on getTeamData pTeam, pTeamName, @xData, @xPartyCount, @xParties
       /* Peak Icon */
       if sSettings["alwaysShowRank"] or tTeammate["hiddenName"] is false or tTeammate["uuid"] is sPUUID then
         put tTeammate["stats"]["peakIcon"] into tPlayerData["peak"]
+        put tTeammate["stats"]["peak"] into tPlayerData["peak_hovertext"]
       else
         put empty into tPlayerData["peak"]
       end if
@@ -398,6 +403,7 @@ on getTeamData pTeam, pTeamName, @xData, @xPartyCount, @xParties
       if tFavouriteWeapon is among the keys of tTeammate["Loadout"] and the number of elements of tTeammate["Loadout"][tFavouriteWeapon] is not empty then
         put tTeammate["Loadout"][tFavouriteWeapon] into tWeapon
         put tWeapon["icon"] into tPlayerData["favouriteWeapon"]
+        put tWeapon["skin"] into tPlayerData["favouriteWeapon_hovertext"]
       end if
 
       appendArray xData, tPlayerData

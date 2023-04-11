@@ -1183,7 +1183,7 @@ function capitalizeWords pString
   local tCapString
   put empty into tCapString
   repeat for each word tWord in pString
-    put toUpper(character 1 of tWord) & (character 2 to -1 of tWord) & space after tCapString
+    put toUpper(character 1 of tWord) & lower(character 2 to -1 of tWord) & space after tCapString
   end repeat
   if the last character of tCapString is space then delete the last character of tCapString
   return tCapString
@@ -1302,3 +1302,20 @@ function presenceToQueueType pPresence
     return tGamemode
   end if
 end presenceToQueueType
+
+on subItemMouseEnter pItemIndex, pItemName
+  local tPolylist, tPolylistRowData
+  put the long id of the target into tPolylist
+  set the itemPointer of tPolylist to pItemIndex
+  put the itemContent of tPolylist into tPolylistRowData
+  set the tooltip of tPolylist to empty
+  if pItemName & "_hovertext" is among the keys of tPolylistRowData then
+    set the tooltip of tPolylist to capitalizeWords(tPolylistRowData[pItemName & "_hovertext"])
+  end if
+end subItemMouseEnter
+
+on subItemMouseLeave
+  local tPolylist
+  put the long id of the target into tPolylist
+  set the tooltip of tPolylist to empty
+end subItemMouseLeave

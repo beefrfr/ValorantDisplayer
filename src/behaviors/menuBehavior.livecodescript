@@ -284,6 +284,7 @@ function getPolylistData pParty
     
     /* Rank Icon */
     put tTeammate["rankIcon"] into tPlayerData["rank"]
+    put tTeammate["rank"] into tPlayerData["rank_hovertext"]
     
     /* RR */
     if tTeammate["rr"] is empty or tTeammate["rank"] is "Unranked" then
@@ -302,6 +303,7 @@ function getPolylistData pParty
 
     /* Peak Icon */
     put tTeammate["peakIcon"] into tPlayerData["peak"]
+    put tTeammate["peak"] into tPlayerData["peak_hovertext"]
 
     /* Peak Act/Episode */
     put "e" & tTeammate["peakEpisode"] & "a" & tTeammate["peakAct"] into tPlayerData["peakAct"]
