@@ -413,11 +413,12 @@ function getRanks
   put 1 into tEpisodeCount
   repeat for each element tSeason in tRawRanks["data"]
     repeat for each element tRank in tSeason["tiers"]
-      local tIconData, tIconLocalPath
+      local tIconData, tIconLocalPath, tHashName, tHashResult
       put tRank["tierName"] into sRanks[tEpisodeCount][tRank["tier"]]["name"]
       put tRank["divisionName"] into sRanks[tEpisodeCount][tRank["tier"]]["division"]
       put tRank["largeIcon"] into tIconPath
-      put tRanksFolder & "/rank_" & tRank["tierName"] & ".data" into tIconLocalPath
+      put binarydecode("H*",md5digest(tRank["tierName"]), tHashName) into tHashResult
+      put tRanksFolder & "/rank_" & tHashName  & ".data" into tIconLocalPath
       if there is a file tIconLocalPath then
         put base64Decode(URL("file:" & tIconLocalPath)) into sRanks[tEpisodeCount][tRank["tier"]]["icon"]
         next repeat
@@ -462,7 +463,7 @@ function getWeapons
     put tWeapon["DisplayName"] & comma after sWeaponList
 
     repeat for each element tSkin in tWeapon["skins"]
-      local tSkinName, tSkinUUID
+      local tSkinName, tSkinUUID, tHashName, tHashResult
       put tSkin["DisplayName"] into tSkinName
       put tSkin["uuid"] into tSkinUUID
       put tWeapon["DisplayName"] into sWeapons[tSkinUUID]["Weapon"]
@@ -470,7 +471,9 @@ function getWeapons
       put tSkinUUID into sWeapons[tSkinUUID]["uuid"]
 
       put tSkin["displayIcon"] into tIconPath
-      put tWeaponsFolder & "/weapon_" & tWeapon["DisplayName"] & "_" & tSkin["DisplayName"] & ".data" into tIconLocalPath
+
+      put binarydecode("H*",md5digest(tWeapon["DisplayName"] & "_" & tSkin["DisplayName"]), tHashName) into tHashResult
+      put tWeaponsFolder & "/weapon_" & tHashName & ".data" into tIconLocalPath
       if there is a file tIconLocalPath then
         put base64Decode(URL("file:" & tIconLocalPath)) into sWeapons[tSkinUUID]["icon"]
         next repeat
@@ -521,10 +524,11 @@ function getAgents
   end if
   local tIconPath
   repeat for each element tAgent in tRawAgents["data"]
-    local tIconData, tIconLocalPath
+    local tIconData, tIconLocalPath, tHashName, tHashResult
     put tAgent["displayName"] into sAgents[tAgent["uuid"]]["name"]
     put tAgent["displayIconSmall"] into tIconPath
-    put tAgentsFolder & "/agent_" & tAgent["displayName"] & ".data" into tIconLocalPath
+    put binarydecode("H*",md5digest(tAgent["displayName"]), tHashName) into tHashResult
+    put tAgentsFolder & "/agent_" & tHashName & ".data" into tIconLocalPath
     if there is a file tIconLocalPath then
       put base64Decode(URL("file:" & tIconLocalPath)) into sAgents[tAgent["uuid"]]["icon"]
       next repeat
