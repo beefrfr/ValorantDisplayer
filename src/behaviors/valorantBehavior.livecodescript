@@ -641,18 +641,19 @@ function fetchData pUrlType, pUrl, pMethod, pDecode
     wait 10 milliseconds with messages
   end repeat
 
-  local tResponse
+  local tRawResult, tDecodedResult
+  put sTsNetResults[tConnectionID] into tRawResult
+  put textDecode(textencode(tRawResult, "native"), "utf-8") into tDecodedResult
+
   if pDecode is false then
-    put sTsNetResults[tConnectionID] into tResponse
     delete variable sTsNetResults[tConnectionID]
-    put tResponse into sFetchDataCache[tUrl]["result"]
-    return tResponse
+    put tDecodedResult into sFetchDataCache[tUrl]["result"]
+    return sFetchDataCache[tUrl]["result"]
   end if
   try
-    put JsonImport(sTsNetResults[tConnectionID]) into tResponse
     delete variable sTsNetResults[tConnectionID]
-    put tResponse into sFetchDataCache[tUrl]["result"]
-    return tResponse
+    put JsonImport(tDecodedResult) into sFetchDataCache[tUrl]["result"]
+    return sFetchDataCache[tUrl]["result"]
   catch tError
     delete variable sTsNetResults[tConnectionID]
     return false
@@ -841,8 +842,11 @@ function getNames pUUIDs
     exit getNames
   end if
   wait until sTsNetResults[tConnectionID] is not empty with messages
+  local tRawResult, tDecodedResult
+  put sTsNetResults[tConnectionID] into tRawResult
+  put textDecode(textencode(tRawResult, "native"), "utf-8") into tDecodedResult
   try
-    put JsonImport(sTsNetResults[tConnectionID]) into tResult
+    put JsonImport(tDecodedResult) into tResult
     delete variable sTsNetResults[tConnectionID]
   catch tError
     delete variable sTsNetResults[tConnectionID]
