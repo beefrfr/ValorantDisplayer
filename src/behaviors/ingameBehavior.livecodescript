@@ -407,42 +407,14 @@ on mainLoop
 
   put kGameState into tGameState
   repeat while tGameState is kGameState
-    if checkSetup() is false then
-      goToPreLoad
-      exit mainLoop
-    end if
-
-    put getPresences() into tPresences
-    put getPrivatePresence(tPresences) into tPrivatePresence
-    put tPrivatePresence["sessionLoopState"] into tGameState
-
-    local tDidFail
-    put getInGameTeams(sMatchID, tPresences, tDidFail) into sTeams
-
-    local tGamemode
-    put presenceToQueueType(tPrivatePresence) into tGamemode
-
-    set the text of field "stateField" to capitalizeWords(tGamemode) & space & slash & slash & space & capitalizeWords(sTeams["map"])
-
-    lock screen for visual effect
-    setupPolylist
-    if tGameState is kGameState then
-      if tDidFail then
-        send "inGameSetupRecursive" to me in 50 milliseconds
-        exit mainLoop
-      end if
-    else
+    if refresh() is false then
       redirect
       exit mainLoop
     end if
 
-    if not isRunning() then
+    if not isRunning() or sSettings["autoRefresh"] is false then
       exit mainLoop
     end if
-
-    /* Update UI */
-    layoutControls
-    unlock screen with visual effect "dissolve" very fast
 
     if not waitForSeconds(20, tGameState) then
       exit mainLoop
@@ -453,3 +425,32 @@ on mainLoop
     redirect
   end if
 end mainLoop
+
+function refresh
+  if checkSetup() is false then
+    return false
+  end if
+
+  if getGameState() is not kGameState then
+    return false
+  end if
+
+  put getPresences() into tPresences
+  put getPrivatePresence(tPresences) into tPrivatePresence
+  put tPrivatePresence["sessionLoopState"] into tGameState
+
+  local tDidFail
+  put getInGameTeams(sMatchID, tPresences, tDidFail) into sTeams
+
+  local tGamemode
+  put presenceToQueueType(tPrivatePresence) into tGamemode
+
+  set the text of field "stateField" to capitalizeWords(tGamemode) & space & slash & slash & space & capitalizeWords(sTeams["map"])
+
+  lock screen for visual effect
+  setupPolylist
+
+  /* Update UI */
+  layoutControls
+  unlock screen with visual effect "dissolve" very fast
+end refresh

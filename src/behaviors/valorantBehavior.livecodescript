@@ -17,6 +17,7 @@ global sFetchDataCache
 global sShouldCache
 global sDefaultSettings
 global sForceUpdate
+global sLastForceRefresh
 
 /* Stack script */
 
@@ -51,6 +52,7 @@ on openStack
   put empty into sAgents
   put empty into sFetchDataCache
   put false into sForceUpdate
+  put milliseconds() into sLastForceRefresh
   useCache
 
   lock screen
@@ -89,6 +91,7 @@ function getSettings
   put false into sDefaultSettings["alwaysShowLevel"]
   put false into sDefaultSettings["alwaysShowWinrate"]
   put true into sDefaultSettings["showParties"]
+  put true into sDefaultSettings["autoRefresh"]
 
   local tSettingsFile
   put (tValorantDisplayerFolder & slash & "settings.json") into tSettingsFile
@@ -185,6 +188,10 @@ end redirect
 
 on goToMenu
   if isRunning() then
+    if the short name of this card is "menu" then
+      send "mainLoop" to card "menu" in 5 milliseconds
+      exit goToMenu
+    end if
     go to card "menu"
     send "menuSetup" to card "menu" in 5 milliseconds
   end if
@@ -192,6 +199,10 @@ end goToMenu
 
 on goToInGame
   if isRunning() then
+    if the short name of this card is "inGame" then
+      send "mainLoop" to card "inGame" in 5 milliseconds
+      exit goToIngame
+    end if
     go to card "inGame"
     send "inGameSetup" to card "inGame" in 5 milliseconds
   end if
@@ -199,6 +210,10 @@ end goToInGame
 
 on goToPreGame
   if isRunning() then
+    if the short name of this card is "preGame" then
+      send "mainLoop" to card "preGame" in 5 milliseconds
+      exit goToPreGame
+    end if
     go to card "preGame"
     send "preGameSetup" to card "preGame" in 5 milliseconds
   end if
@@ -1245,6 +1260,27 @@ on menuPick pChosenItem
     put not sSettings["showParties"] into sSettings["showParties"]
   else if item 1 of pChosenItem is "Main Weapon" then
     put item 2 of pChosenItem into sSettings["favouriteWeapon"]
+  else if item 1 of pChosenItem is "Refresh" then
+    switch item 2 of pChosenItem
+    case "Auto refresh"
+      put not sSettings["autoRefresh"] into sSettings["autoRefresh"]
+      try
+        send "mainLoop" to this card in 5 milliseconds
+      catch tErr
+        exit menuPick
+      end try
+      break
+    case "Refresh"
+      try
+        put milliseconds() into sLastForceRefresh
+        if value("refresh()", this card) is false then
+          send "redirect" to me in 5 milliseconds
+        end if
+      catch tErr
+        exit menuPick
+      end try
+      break
+    end switch
   end if
   put true into sForceUpdate
   saveSettings
@@ -1268,6 +1304,23 @@ function generateRightClickMenu
     put "!cShow Parties" & return after tMenu
   else
     put "Show Parties" & return after tMenu
+  end if
+  put "-" & return after tMenu
+
+  put "Refresh" & return after tMenu
+  if sSettings["autoRefresh"] is true then
+    put tab & "!cAuto refresh" & return after tMenu
+    put tab & "(Refresh" & return after tMenu
+  else
+    put tab & "Auto refresh" & return after tMenu
+
+    local tTimeSinceLastRefresh
+    put round(((milliseconds() - sLastForceRefresh) / 1000) + 0.5) into tTimeSinceLastRefresh
+    if tTimeSinceLastRefresh >= 5 then
+      put tab & "Refresh" & return after tMenu
+    else
+      put tab & "(Refresh (wait" && (5-tTimeSinceLastRefresh) && "more seconds)" & return after tMenu
+    end if
   end if
   put "-" & return after tMenu
 

@@ -315,41 +315,52 @@ on mainLoop
   
   put kGameState into tGameState
   repeat while tGameState is kGameState
-    if checkSetup() is false then
-      goToPreLoad
+    if refresh() is false then
+      redirect
       exit mainLoop
     end if
-
-    local tDidFail
-    put getPresences() into tPresences
-    put getPrivatePresence(tPresences) into tPrivatePresence
-    put getPartyMemberData(tPresences, tDidFail) into sParty
-
-    local tGamemode
-    put presenceToQueueType(tPrivatePresence) into tGamemode
-
-    set the text of field "stateField" to "Menu" & space & slash & slash & space & capitalizeWords(tGamemode)
-
-    lock screen for visual effect
-    setupPolylist
-
-    if not isRunning() then
-       exit mainLoop
-    end if
-
-    /* Update UI */
-    layoutControls
-
-    unlock screen with visual effect "dissolve" very fast
 
     if not waitForSeconds(2, tGameState) then
       exit mainLoop
     end if
 
     put getGameState() into tGameState
+
+    if not isRunning() or sSettings["autoRefresh"] is false then
+       exit mainLoop
+    end if
   end repeat
 
   if isRunning() then
     redirect
   end if
 end mainLoop
+
+function refresh
+  if checkSetup() is false then
+    return false
+  end if
+
+  if getGameState() is not kGameState then
+    return false
+  end if
+
+  local tDidFail
+  put getPresences() into tPresences
+  put getPrivatePresence(tPresences) into tPrivatePresence
+  put getPartyMemberData(tPresences, tDidFail) into sParty
+
+  local tGamemode
+  put presenceToQueueType(tPrivatePresence) into tGamemode
+
+  set the text of field "stateField" to "Menu" & space & slash & slash & space & capitalizeWords(tGamemode)
+
+  lock screen for visual effect
+  setupPolylist
+
+  /* Update UI */
+  layoutControls
+
+  unlock screen with visual effect "dissolve" very fast
+  return true
+end refresh
