@@ -57,6 +57,14 @@ on openStack
   put milliseconds() into sLastForceRefresh
   useCache
 
+  local tFontFile, tFontName
+  put "OpenSans-Regular" into tFontName
+  put (specialFolderPath("resources") & "/assets/fonts/" & tFontName & ".ttf") into tFontFile
+  if there is a file tFontFile then
+    start using font file tFontFile
+    set the textFont of this stack to tFontName
+  end if
+
   lock screen
   set the backgroundcolor of this stack to kBackgroundColor
   repeat with x = (the number of cards of this stack) down to 1
