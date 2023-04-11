@@ -1291,7 +1291,7 @@ function generateRightClickMenu
   local tMenu
   put empty into tMenu
 
-  put "Main Weapon" & return after tMenu
+  put "!cMain Weapon" & return after tMenu
   repeat for each item tWeapon in getWeaponList()
     if tWeapon is sSettings["favouriteWeapon"] then
       put tab & "!c" & capitalizeWords(tWeapon) & return after tMenu
@@ -1307,7 +1307,7 @@ function generateRightClickMenu
   end if
   put "-" & return after tMenu
 
-  put "Refresh" & return after tMenu
+  put "!cRefresh" & return after tMenu
   if sSettings["autoRefresh"] is true then
     put tab & "!cAuto refresh" & return after tMenu
     put tab & "(Refresh" & return after tMenu
@@ -1324,7 +1324,7 @@ function generateRightClickMenu
   end if
   put "-" & return after tMenu
 
-  put "Bannable Settings" & return after tMenu
+  put "!cBannable Settings" & return after tMenu
   put tab & "(These settings are against Valorant" & return after tMenu
   put tab & "(TOS and may result in a ban" & return after tMenu
   if sSettings["alwaysShowRank"] is true then
