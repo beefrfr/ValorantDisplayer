@@ -92,17 +92,6 @@ on createControls
   set the enableImageCache of widget "playersPolylist" to false
   set the dataContent of widget "playersPolylist" to empty
 
-  set the width of the templategraphic to 4
-  set the opaque of the templategraphic to true
-  set the lineSize of the templategraphic to 0
-  set the backgroundColor of the templategraphic to "#929292"
-
-  create invisible button "rightClickMenu" in card kCurrentCard
-  set the menuMode of button "rightClickMenu" to "popup"
-  set the style of button "rightClickMenu" to "menu"
-
-  reset the templategraphic
-
   layoutControls
 end createControls
 

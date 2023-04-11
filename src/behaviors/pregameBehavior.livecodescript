@@ -97,12 +97,6 @@ on createControls
   set the lineSize of the templategraphic to 0
   set the backgroundColor of the templategraphic to "#929292"
 
-  create invisible button "rightClickMenu" in card kCurrentCard
-  set the menuMode of button "rightClickMenu" to "popup"
-  set the style of button "rightClickMenu" to "menu"
-
-  reset the templategraphic
-
   layoutControls
 end createControls
 

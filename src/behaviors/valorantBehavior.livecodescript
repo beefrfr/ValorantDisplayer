@@ -16,6 +16,7 @@ global sActs
 global sFetchDataCache
 global sShouldCache
 global sDefaultSettings
+global sForceUpdate
 
 /* Stack script */
 
@@ -47,6 +48,7 @@ on openStack
   put empty into sWeaponList
   put empty into sAgents
   put empty into sFetchDataCache
+  put false into sForceUpdate
   useCache
   send "goToPreLoad" to me in 5 milliseconds
 end openStack
@@ -491,7 +493,9 @@ function getWeapons
   if the last character of sWeaponList is comma then delete the last character of sWeaponList
 
   /* Check Settings */
-  if sSettings["favouriteWeapon"] is not among the items of sWeaponList then
+  if sSettings["favouriteWeapon"] is not among the items of sWeaponList or \
+      the number of items of sSettings["favouriteWeapon"] > 1 or \
+      the number of items of sSettings["favouriteWeapon"] < 1 then
     put sDefaultSettings["favouriteWeapon"] into sSettings["favouriteWeapon"]
   end if
 
@@ -1159,6 +1163,10 @@ function waitForSeconds pSeconds, pInitialGameState
       redirect
       return false
     end if
+    if sForceUpdate then
+      put false into sForceUpdate
+      return true
+    end if
   end repeat
   return true
 end waitForSeconds
@@ -1203,20 +1211,12 @@ on menuPick pChosenItem
       put not sSettings["alwaysShowLevel"] into sSettings["alwaysShowLevel"]
       break
     end switch
-  else if item 1 of pChosenItem is "Parties" then
-    switch item 2 of pChosenItem
-    case "Dye"
-      put not sSettings["showParties"] into sSettings["showParties"]
-      break
-    case "Number"
-      toggleVisibleSection "party"
-      break
-    end switch
-  else if item 1 of pChosenItem is "Visible Weapons" then
-    toggleVisibleSection (item 2 of pChosenItem)
-  else
-    toggleVisibleSection (item 1 of pChosenItem)
+  else if item 1 of pChosenItem is "Show Parties" then
+    put not sSettings["showParties"] into sSettings["showParties"]
+  else if item 1 of pChosenItem is "Main Weapon" then
+    put item 2 of pChosenItem into sSettings["favouriteWeapon"]
   end if
+  put true into sForceUpdate
   saveSettings
   set the itemdelimiter to comma
 end menuPick
@@ -1225,35 +1225,19 @@ function generateRightClickMenu
   local tMenu
   put empty into tMenu
 
-  put "(Visible Sections" & return after tMenu
-  repeat for each item tItem in "agent,name,rank,peak,winrate,level"
-    if tItem is among the items of sSettings["visibleSections"] then
-      put "!c" & capitalizeWords(tItem) & return after tMenu
-    else
-      put capitalizeWords(tItem) & return after tMenu
-    end if
-  end repeat
-
-  put "Visible Weapons" & return after tMenu
+  put "Main Weapon" & return after tMenu
   repeat for each item tWeapon in getWeaponList()
-    if tWeapon is among the items of sSettings["visibleSections"] then
+    if tWeapon is sSettings["favouriteWeapon"] then
       put tab & "!c" & capitalizeWords(tWeapon) & return after tMenu
     else
       put tab & capitalizeWords(tWeapon) & return after tMenu
     end if
   end repeat
-  put "-" & return after tMenu
-
-  put "Parties" & return after tMenu
+  
   if sSettings["showParties"] is true then
-    put tab & "!cDye" & return after tMenu
+    put "!cShow Parties" & return after tMenu
   else
-    put tab & "Dye" & return after tMenu
-  end if
-  if "party" is among the items of sSettings["visibleSections"] then
-    put tab & "!cNumber" & return after tMenu
-  else
-    put tab & "Number" & return after tMenu
+    put "Show Parties" & return after tMenu
   end if
   put "-" & return after tMenu
 
@@ -1282,6 +1266,11 @@ end generateRightClickMenu
 
 on mouseUp pButton
   if pButton is 3 then
+    if there is not a button "rightClickMenu" then
+      create invisible button "rightClickMenu"
+      set the menuMode of button "rightClickMenu" to "popup"
+      set the style of button "rightClickMenu" to "menu"
+    end if
     set the text of button "rightClickMenu" to generateRightClickMenu()
     popup button "rightClickMenu" at the mouseloc
   end if
