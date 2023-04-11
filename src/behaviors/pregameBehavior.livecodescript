@@ -330,7 +330,7 @@ on getTeamData pTeam, pTeamName, @xData, @xPartyCount, @xParties
 
       /* Agent Shading */
       put "34,42,53,0" into tPlayerData["agentSelected"]
-      if tTeammate["agentSelected"] is not empty then
+      if tTeammate["agentSelected"] is false then
         put "34,42,53,120" into tPlayerData["agentSelected"]
       end if
       put tTeammate["agent"] into tPlayerData["agentSelected_hovertext"]
