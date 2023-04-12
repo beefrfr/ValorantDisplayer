@@ -203,6 +203,7 @@ on main
 	  /* Profile Specific */
 		setStatus "Looking for Riot Client", tStepForProfile
 	  repeat while getLockFile() is false and tErrorCount < 25
+	  	ignoreCache
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
 	  end repeat
@@ -214,6 +215,7 @@ on main
 
 	  setStatus "Getting Header data", tStepForProfile
 	  repeat while getHeaders() is false and tErrorCount < 25
+	  	ignoreCache
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
 	  end repeat
@@ -225,6 +227,7 @@ on main
 
 	  setStatus "Getting current Valorant version", tStepForProfile
 	  repeat while getCurrentVersion() is false and tErrorCount < 25
+	  	ignoreCache
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
 	  end repeat
@@ -236,6 +239,7 @@ on main
 
 	  setStatus "Getting account region", tStepForProfile
 	  repeat while getRegion() is false and tErrorCount < 25
+	  	ignoreCache
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
 	  end repeat
@@ -247,6 +251,7 @@ on main
 
 	  setStatus "Getting season data", tStepForProfile
 	  repeat while getSeasons() is false and tErrorCount < 25
+	  	ignoreCache
 	  	wait 25 milliseconds with messages
 	  	add 1 to tErrorCount
 	  end repeat
