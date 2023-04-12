@@ -24,6 +24,7 @@ constant kCurrentCard = "menu"
 constant kGameState = "MENUS"
 
 on menuSetup
+  ignoreCache
   clearControls
   createControls
   mainLoop

@@ -22,7 +22,7 @@ global sLastForceRefresh
 /* Stack script */
 
 constant kDivisionList = "Unranked,Iron,Bronze,Silver,Gold,Plat,Diamond,Ascendant,Immortal,Radiant"
-constant kCacheTimeoutMilliseconds = 10000
+constant kCacheTimeoutMilliseconds = 120000
 constant kBackgroundColor = "34, 42, 53"
 constant kMinRowHeight = 50
 constant kMaxRowHeight = 250
@@ -659,11 +659,13 @@ function fetchData pUrlType, pUrl, pMethod, pDecode, pIgnoreCharacterConversion
     put tAuthHeader into tHeaders
     
     put "https://127.0.0.1:" & sLockPort & "/" & pUrl into tUrl
+    ignoreCache
     break
   case "custom"
     put pUrl into tUrl
     break
   default
+    useCache
     exit fetchData
   end switch
 
@@ -678,6 +680,7 @@ function fetchData pUrlType, pUrl, pMethod, pDecode, pIgnoreCharacterConversion
           if (milliseconds() - sFetchDataCache[tUrl]["millis"]) < kCacheTimeoutMilliseconds then
             /* Check cache wasnt failed */
             if sFetchDataCache[tUrl]["result"] is not false then
+              useCache
               return sFetchDataCache[tUrl]["result"]
             end if
           end if
@@ -702,9 +705,11 @@ function fetchData pUrlType, pUrl, pMethod, pDecode, pIgnoreCharacterConversion
   else if pMethod is "POST" then
     put tsNetPost(tConnectionID, tUrl, tHeaders, empty, tsNetCallback) into tResult
   else
+    useCache
     return false
   end if
   if tResult is not empty then
+    useCache
     exit fetchData
   end if
   repeat while sTsNetResults[tConnectionID] is empty
@@ -722,14 +727,17 @@ function fetchData pUrlType, pUrl, pMethod, pDecode, pIgnoreCharacterConversion
   if pDecode is false then
     delete variable sTsNetResults[tConnectionID]
     put tDecodedResult into sFetchDataCache[tUrl]["result"]
+    useCache
     return sFetchDataCache[tUrl]["result"]
   end if
   try
     delete variable sTsNetResults[tConnectionID]
     put JsonImport(tDecodedResult) into sFetchDataCache[tUrl]["result"]
+    useCache
     return sFetchDataCache[tUrl]["result"]
   catch tError
     delete variable sTsNetResults[tConnectionID]
+    useCache
     return false
   end try
 end fetchData
@@ -978,9 +986,7 @@ end getPreGameID
 
 function getMatchStats pMatchID, pAttempt
   local tResult
-  ignoreCache
   put fetchData("glz", "/core-game/v1/matches/" & pMatchID, "get") into tResult
-  useCache
 
   if tResult is not false and tResult["errorCode"] is not "RESOURCE_NOT_FOUND" then
     if tResult["errorCode"] is "BAD_CLAIMS" then
@@ -998,9 +1004,7 @@ end getMatchStats
 
 function getPreGameStats pMatchID, pAttempt
   local tResult
-  ignoreCache
   put fetchData("glz", "/pregame/v1/matches/" & pMatchID, "get") into tResult
-  useCache
 
   if tResult is not false and tResult["errorCode"] is not "RESOURCE_NOT_FOUND" then
     if tResult["errorCode"] is "BAD_CLAIMS" then

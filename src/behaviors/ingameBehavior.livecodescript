@@ -25,6 +25,7 @@ constant kCurrentCard = "inGame"
 constant kGameState = "INGAME"
 
 on inGameSetup
+  ignoreCache
   clearControls
   createControls
   inGameSetupRecursive

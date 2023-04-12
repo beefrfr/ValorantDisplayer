@@ -25,6 +25,7 @@ constant kCurrentCard = "preGame"
 constant kGameState = "PREGAME"
 
 on preGameSetup
+  ignoreCache
   clearControls
   createControls
   preGameSetupRecursive
