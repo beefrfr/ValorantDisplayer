@@ -21,7 +21,7 @@ global sLastForceRefresh
 
 /* Stack script */
 
-constant kDivisionList = "Unranked,Iron,Bronze,Silver,Gold,Plat,Diamond,Ascendant,Immortal,Radiant"
+constant kDivisionList = "Unranked,Iron,Bronze,Silver,Gold,Platinum,Diamond,Ascendant,Immortal,Radiant"
 constant kCacheTimeoutMilliseconds = 120000
 constant kBackgroundColor = "34, 42, 53"
 constant kMinRowHeight = 50
@@ -475,6 +475,11 @@ function getRanks
       local tIconData, tIconLocalPath, tHashName, tHashResult
       put tRank["tierName"] into sRanks[tEpisodeCount][tRank["tier"]]["name"]
       put tRank["divisionName"] into sRanks[tEpisodeCount][tRank["tier"]]["division"]
+
+      if not matchText(tRank["tierName"], ".*?(\d+)", sRanks[tEpisodeCount][tRank["tier"]]["number"]) then
+        put 0 into sRanks[tEpisodeCount][tRank["tier"]]["number"]
+      end if
+
       put tRank["largeIcon"] into tIconPath
       put binarydecode("H*",md5digest(tRank["tierName"]), tHashName) into tHashResult
       put tRanksFolder & "/rank_" & tHashName  & ".data" into tIconLocalPath
@@ -880,6 +885,12 @@ function getPlayerStats pUUID, @xDidFail
       put tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][tKey]["Rank"] into tCurrentMaxRank
       put tDivision into tCurrentMaxDivision
       put tKey into tCurrentMaxSeason
+    else if compareDivisions(tDivision, tCurrentMaxDivision) is 0 then
+      if sRanks[actIDToEpisode(tKey)][tRank]["number"] > sRanks[actIDToEpisode(tCurrentMaxSeason)][tCurrentMaxRank]["number"] then
+        put tPlayerHistory["QueueSkills"]["competitive"]["SeasonalInfoBySeasonID"][tKey]["Rank"] into tCurrentMaxRank
+        put tDivision into tCurrentMaxDivision
+        put tKey into tCurrentMaxSeason
+      end if
     end if
   end repeat
   put rankNumberToRank(tCurrentMaxRank, actIDToEpisode(tCurrentMaxSeason)) into tPlayerStats["peak"]
@@ -1200,6 +1211,8 @@ end actIDToAct
 function compareDivisions pDiv1, pDiv2
   if itemOffset(pDiv1, kDivisionList) > itemOffset(pDiv2, kDivisionList) then
     return 1
+  else if itemOffset(pDiv1, kDivisionList) is itemOffset(pDiv2, kDivisionList) then
+    return 0
   else
     return 2
   end if
