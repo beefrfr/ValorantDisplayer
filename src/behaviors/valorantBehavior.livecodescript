@@ -140,6 +140,8 @@ end saveSettings
 on closeStack
   put false into sRunning
   close this stack
+  lock messages
+  quit 1
 end closeStack
 
 function stopRunning
