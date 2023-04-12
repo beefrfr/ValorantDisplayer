@@ -31,7 +31,9 @@ on menuSetup
 end menuSetup
 
 on resizeStack
+  lock screen
   layoutControls
+  unlock screen
 end resizeStack
 
 on clearControls

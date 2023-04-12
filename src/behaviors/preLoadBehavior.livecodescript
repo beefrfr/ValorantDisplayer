@@ -21,7 +21,9 @@ on openCard
 end openCard
 
 on resizeStack
-	layoutControls
+  lock screen
+  layoutControls
+  unlock screen
 end resizeStack
 
 on clearControls

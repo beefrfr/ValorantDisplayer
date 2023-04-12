@@ -54,7 +54,9 @@ on preGameSetupRecursive
 end preGameSetupRecursive
 
 on resizeStack
+  lock screen
   layoutControls
+  unlock screen
 end resizeStack
 
 on clearControls
