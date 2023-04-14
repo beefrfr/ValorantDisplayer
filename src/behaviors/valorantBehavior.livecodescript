@@ -30,7 +30,7 @@ constant kMaxRowHeight = 250
 constant kContentUrl = "https://beefrfr.uk/content.php"
 constant kRelease = "beta"
 constant kVersion = "2"
-constant kSubversion = "3"
+constant kSubversion = "4"
 
 global sRunning
 global sSubItemClick

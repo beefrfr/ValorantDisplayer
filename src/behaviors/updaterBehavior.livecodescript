@@ -1,4 +1,4 @@
-script "updaterBehavior"
+﻿script "updaterBehavior"
 
 local sDownloadProgress, sSettings
 
