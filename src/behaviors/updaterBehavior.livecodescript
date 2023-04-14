@@ -48,7 +48,7 @@ on getSettings
     local tSettingsChanged
     put false into tSettingsChanged
     repeat for each key tKey in sDefaultSettings
-      if tKey is not among the keys of sSettings then
+      if tKey is not among the keys of sSettings or sSettings[tKey] is empty then
         put sDefaultSettings[tKey] into sSettings[tkey]
         put true into tSettingsChanged
       end if
