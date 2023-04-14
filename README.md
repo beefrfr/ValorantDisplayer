@@ -40,20 +40,22 @@ There are two ways to download, installer or manual.
  - [ ] Show players with riot gun buddy
 
 ## Save as Standalone Instructions
-1. Delete `assets/downloaded/` folder
-2. Open Project Browser
-3. Delete all substacks of `displayerStack`
-4. For each stack other than `displayerStack` open Property Inspector and set the "Main Stack" to `displayerStack`
-5. Supress messages
-6. Stop all current running code (`ctrl` + `.`)
-7. Update standalone settings
-8. Build standalone (if it asks to save, save it)
-9. Close livecode
-10. Fix folder structure of created standalone
+1. Update constants in `valorantBehavior.livecodescript` and `updaterBehavior.livecodescript`
+2. Compile `updater.livecode`
+3. Delete `assets/downloaded/` folder
+4. Open Project Browser
+5. Delete all substacks of `displayerStack`
+6. For each stack other than `displayerStack` open Property Inspector and set the "Main Stack" to `displayerStack`
+7. Supress messages
+8. Stop all current running code (`ctrl` + `.`)
+9. Update standalone settings
+10. Build standalone (if it asks to save, save it)
+11. Close livecode
+12. Fix folder structure of created standalone
  * Move all files into `Dist/Files/{version}`
-11. Commit standalone
-12. Delete changes to `displayer.livecode`
-13. Rename created folder in `Dist/Files/` to be the App Version
-14. Change `AppVersion` in `ValorantDisplayerSetupScript.iss` to be the App 
+13. Commit standalone
+14. Delete changes to `displayer.livecode`
+15. Rename created folder in `Dist/Files/` to be the App Version
+16. Change `AppVersion` in `ValorantDisplayerSetupScript.iss` to be the App 
 Version defined in step 9
-15. Compile installer using Inno Setup
+17. Compile installer using Inno Setup
