@@ -152,6 +152,10 @@ on main
 	  end if
 	  add 1 to tStep
 
+	  if not checkVersion() then
+	  	exit main
+	  end if
+
 		setStatus "Getting rank data", tStep
 	  repeat while getRanks() is false and tErrorCount < 25
 	  	wait 25 milliseconds with messages

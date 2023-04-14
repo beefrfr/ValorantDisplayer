@@ -27,9 +27,26 @@ constant kBackgroundColor = "34, 42, 53"
 constant kMinRowHeight = 50
 constant kMaxRowHeight = 250
 
+constant kContentUrl = "https://beefrfr.uk/content.php"
+constant kRelease = "beta"
+constant kVersion = "2"
+constant kSubversion = "3"
+
 global sRunning
 global sSubItemClick
 local sTsNetResults
+
+function getRelease
+  return kRelease
+end getRelease
+
+function getVersion
+  return kVersion
+end getVersion
+
+function getSubversion
+  return kSubversion
+end getSubversion
 
 on useCache
   put true into sShouldCache
@@ -103,6 +120,9 @@ function getSettings
   put false into sDefaultSettings["alwaysShowWinrate"]
   put true into sDefaultSettings["showParties"]
   put true into sDefaultSettings["autoRefresh"]
+  put kRelease into sDefaultSettings["release"]
+  put kVersion into sDefaultSettings["version"]
+  put kSubversion into sDefaultSettings["subversion"]
 
   local tSettingsFile
   put (tValorantDisplayerFolder & slash & "settings.json") into tSettingsFile
@@ -1487,3 +1507,43 @@ on sendUpdate pMessage
     exit sendUpdate
   end try
 end sendUpdate
+
+function checkVersion
+  local tVersionResult
+  get URL(kContentUrl & "?data=current")
+  put it into tResult
+  local tCurrentVersion
+  put JsonImport(tResult) into tCurrentVersion
+
+  if tCurrentVersion["release"] is "beta" and sSettings["release"] is "release" then
+    return true
+  else if tCurrentVersion["release"] is sSettings["release"] then
+    if sSettings["version"] >= tCurrentVersion["version"] then
+      return true
+    else if sSettings["version"] is tCurrentVersion["version"] and sSettings["subversion"] >= tCurrentVersion["subversion"] then
+      return true
+    end if
+  end if
+  
+  repeat for each element tRequirement in tCurrentVersion["requirements"]
+    wait 50 milliseconds with messages
+    local tUrl
+    put (kContentUrl & "?data=updater") into tUrl
+
+    load URL tUrl with message "updaterDownloadComplete"
+  end repeat
+  return false
+end checkVersion
+
+command updaterDownloadComplete pURL, pStatus
+  if pStatus = "error" or pStatus = "timeout" then
+    answer error "Update Failed"
+    quit
+  end if
+  local tResources
+  put specialFolderPath("resources") into tResources
+  put URL pURL into URL ("binfile:" & tResources & "/updater.exe")
+  unload pURL
+  launch document (tResources & "/updater.exe")
+  quit
+end updaterDownloadComplete

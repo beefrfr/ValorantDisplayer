@@ -1,12 +1,16 @@
 script "updaterBehavior"
 
-local sDownloadProgress
+local sDownloadProgress, sSettings
 
 constant kContentUrl = "https://beefrfr.uk/content.php"
-constant kCurrentCard = "updaterCard"
+
+constant kRelease = "beta"
+constant kVersion = "2"
+constant kSubversion = "3"
 
 on openStack
 	set the backgroundcolor of me to "34, 42, 53"
+	getSettings
 	clearControls
 	layoutControls
 	getData
@@ -64,8 +68,8 @@ on saveSettings
 end saveSettings
 
 on clearControls
-	repeat with x = (the number of controls of card kCurrentCard) down to 1
-		if there is a control x of card kCurrentCard then delete control x of card kCurrentCard
+	repeat with x = (the number of controls of me) down to 1
+		if there is a control x of me then delete control x of me
 	end repeat
 end clearControls
 
@@ -76,7 +80,7 @@ on createControls
 	set the opaque of the templategraphic to true
 	set the lineSize of the templategraphic to 0
 
-	create graphic "progressBarBack" in card kCurrentCard
+	create graphic "progressBarBack"
 	set the backgroundColor of graphic "progressBarBack" to "25, 31, 40"
 	set the dropShadow["distance"] of graphic "progressBarBack" to 3
 	set the dropShadow["size"] of graphic "progressBarBack" to 3
@@ -88,7 +92,7 @@ on createControls
 	set the dropShadow["angle"] of graphic "progressBarBack" to 45
 	set the dropShadow["knockout"] of graphic "progressBarBack" to true
 
-	create graphic "progressBarProgress" in card kCurrentCard
+	create graphic "progressBarProgress"
 	set the backgroundcolor of graphic "progressBarProgress" to "153,41,41"
 	set the cProgressBarCount of graphic "progressBarProgress" to 0
 	set the cProgressBarMax of graphic "progressBarProgress" to 10
@@ -120,6 +124,19 @@ on getData
 	put it into tResult
 	local tCurrentVersion
 	put JsonImport(tResult) into tCurrentVersion
+
+	if tCurrentVersion["release"] is "beta" and sSettings["release"] is "release" then
+		loadValorantDisplayer
+		exit getData
+	else if tCurrentVersion["release"] is sSettings["release"] then
+		if sSettings["version"] >= tCurrentVersion["version"] then
+			loadValorantDisplayer
+			exit getData
+		else if sSettings["version"] is tCurrentVersion["version"] and sSettings["subversion"] >= tCurrentVersion["subversion"] then
+			loadValorantDisplayer
+			exit getData
+		end if
+  end if
 
 	libURLSetStatusCallback "showProgress", the long name of me
 	
@@ -167,8 +184,8 @@ end showProgress
 
 command downloadComplete pURL, pStatus
 	if pStatus = "error" or pStatus = "timeout" then
-		answer error "The file could not be downloaded."
-		exit downloadComplete
+		answer error "Update Failed"
+		quit
 	end if
 	if sDownloadProgress["urls"][pUrl]["complete"] is false then
 		put true into sDownloadProgress["urls"][pUrl]["complete"]
